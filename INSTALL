@@ -1,0 +1,64 @@
+Readme
+------
+
+Checkmail.module check's your POP3 Mailaccount and outputs the number of mails in your 
+INBOX, and the total size of the mails in your mailbox.
+
+WORKS ONLY WITH A POP3 MAIL ACCOUNT!!!
+
+
+
+Install
+-------
+
+1. Copy checkmail.module to your \modules\ directory.
+2. Enable the module in 'Admin' | 'Site Settings' | 'modules'.
+3. Configure it under 'Admin' | 'Site Settings' | 'checkmail'.
+
+
+
+Configuration
+-------------
+
+There are several configuration options to set:
+
+- POP3 E-Mail Server
+Give your e-mail server. As Example: 'Drupal.org' (Without the '' and without an @)
+
+- POP3 E-Mail Port
+Enter the port, which is used to get access to the mail server. As far as I know this 
+should always be '110'. (But I am not sure about that.)
+
+- POP3 E-Mail Username
+Your username to get access to identify yourself on the mailserver.
+
+- POP3 E-mail Alias
+This is the piece of your email address in front of the @Your-Domain.com. 
+For Example if your e-mail address is 'Stefan@Drupal.org'. This should be 'Stefan'.
+
+- POP3 E-Mail Password
+Without the password, we will never get r mail on the page. So, I think this speaks 
+for it selves.
+
+
+
+Requirements
+------------
+
+Requires Drupal version 4.0 or later
+
+
+
+Todo
+-----
+
+- Haven't got any idea, but idea's are always welcome.
+
+
+
+Author
+-------
+
+Stefan Nagtegaal <Stefan@Sempre-Crescendo.nl>
+http://www.Sempre-Crescendo.nl/
+
