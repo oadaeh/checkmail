@@ -1,0 +1,251 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Generates a page for a single user to check a POP3 email account for new mail.
+ *
+ * @author Stefan Nagtegaal <Stefan at: Sempre-Crescendo.nl>
+ * @author David Kent Norman <deekayen at: deekayen {dot} net>
+ */
+
+/**
+ * Help hook
+ *
+ * @param string $section
+ * @return string
+ */
+function checkmail_help($section) {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('Let admins see if there is mail in the pop3-mailbox.');
+    case 'admin/settings/checkmail':
+      return t('Configuration to check a single POP3 email account for new mail.');
+  }
+}
+
+/**
+ * Menu hook
+ *
+ * @param unknown_type $may_cache
+ * @return unknown
+ */
+function checkmail_menu($may_cache) {
+  global $user;
+  $items = array();
+  $access = user_access('access check email');
+
+  if ($may_cache) {
+    $items[] = array('path' => 'checkmail', 'title' => t('check email'),
+                     'callback' => 'checkmail_page', 'access' => $access);
+  }
+  return $items;
+}
+
+function checkmail_perm() {
+  return array('access check email', 'administer checkmail');
+}
+
+/**
+ * Block display and configuration
+ *
+ * @param string $op
+ * @param integer $delta
+ * @param array $edit
+ * @return mixed
+ */
+function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
+  $block = $blocks = array();
+  switch($op) {
+    case 'list':
+      if (user_access('administer checkmail')) {
+        $blocks[0]['info'] = t('Check email');
+        return $blocks;
+      }
+      break;
+    case 'configure':
+      if (user_access('administer checkmail')) {
+        $form['block_subject'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Block title'),
+          '#default_value' => variable_get('checkmail_block_subject', 'check email'),
+          '#size' => 60,
+          '#maxlength' => 128,
+          '#required' => false
+        );
+        $form['block_cache'] = array(
+          '#type' => 'select',
+          '#title' => t('Cache'),
+          '#default_value' => variable_get('checkmail_block_cache', 60),
+          '#options' => array('no cache', 30 => t('30 seconds'), 60 => t('1 minute'), 300 => t('5 minutes'), 600 => t('10 minutes'), 900 => t('15 minutes'), 1800 => t('30 minutes'), 3600 => t('1 hour'), 21600 => t('6 hours'), 43200 => t('12 hours'), 86400 => t('1 day')),
+          '#description' => t('Cache the mail results for this amount of time before querying the server again.'),
+          '#required' => false
+        );
+        return $form;
+      }
+      break;
+    case 'save':
+      if (user_access('administer checkmail')) {
+        if($delta == 0) {
+          variable_set('checkmail_block_subject', $edit['block_subject']);
+          variable_set('checkmail_block_cache', $edit['block_cache']);
+        }
+      }
+      break;
+    case 'view': default:
+      switch($delta) {
+        case 0:
+          if (user_access('access check email')) {
+            $time = time();
+            $cache = variable_get('checkmail_block_cache', 60);
+            $last_check = variable_get('checkmail_checked_time', $time);
+            if((!$cache || $time == $last_check) || ($cache > 0 && $time > $last_check+$cache)) {
+              $mail = _checkmail();
+            }
+            else {
+              $mail = array();
+              $mail[2] = variable_get('checkmail_cache_num', t('cache not set!'));
+              $mail[3] = variable_get('checkmail_cache_mem', t('cache not set!'));
+            }
+
+            $block['subject'] = variable_get('checkmail_block_subject', 'check mail');
+            $block['content'] = t('%mailsum %email; %mailmem KB', array('%mailsum' => $mail[2], '%email' => $mail[2] == 1 ? t('email') : t('emails'), '%mailmem' => sprintf("%01.2f", $mail[3] ? $mail[3]/1024 : $mail[3])));
+          }
+          break;
+      }
+      return $block;
+  }
+}
+
+/**
+ * Generates the output when the menu link is clicked
+ */
+function checkmail_page() {
+  if (user_access('access check email')) {
+    $mail = _checkmail();
+    $output = '<p>'. t('%account has %mailsum %email.', array('%account' => "{$mail[0]}@{$mail[1]}", '%mailsum' => $mail[2], '%email' => $mail[2] == 1 ? t('email') : t('emails')));
+    $output .= '<br />'. t('Total size of inbox: %mailmem KB.', array('%mailmem' => sprintf("%01.2f", $mail[3] ? $mail[3]/1024 : $mail[3]))) .'</p>';
+    echo theme('page', $output);
+  }
+}
+
+/**
+ * Check the POP3 server and set cache
+ *
+ * @return array
+ *  0 = pop3 user
+ *  1 = pop3 server
+ *  2 = number of emails
+ *  3 = size of inbox in bytes
+ */
+function _checkmail() {
+  $output = '';
+  $pop3_server = variable_get('checkmail_pop3mail_server', '');
+  $pop3_port = (int)variable_get('checkmail_pop3mail_port', 110);
+  $pop3_user = variable_get('checkmail_pop3mail_user', '');
+  $pop3_password = variable_get('checkmail_pop3mail_password', '');
+
+  if(empty($pop3_server)) {
+    drupal_set_message(t('POP3 server is not configured!'));
+    return;
+  }
+  if(empty($pop3_user)) {
+    drupal_set_message(t('POP3 user is not configured!'));
+    return;
+  }
+
+  $mailserver = fsockopen($pop3_server, $pop3_port, $errno, $errstr, 30);
+  if(!$mailserver) {
+    drupal_set_message(t("Can't connect to mailserver %server"), array('%server' => $pop3_server));
+    watchdog('checkmail', "Connection error! $errno: $errstr", WATCHDOG_ERROR);
+  } else {
+
+    $buffer=fgets($mailserver,512);
+
+    $buffer="USER $pop3_user\n";
+    fputs($mailserver, $buffer);
+    $buffer=fgets($mailserver, 512);
+
+    $buffer="PASS $pop3_password\n";
+    fputs($mailserver, $buffer);
+
+    $buffer=fgets($mailserver, 512);
+
+    if (substr($buffer, 0, 4) == '-ERR') {
+      drupal_set_message(t('Invalid password or username for checking %account'), array('%account' => "$pop3_user@$pop3_server"));
+      drupal_set_message(t('Go to administer > settings > checkmail and re-configure your mail settings'));
+      fclose($mailserver);
+
+    } else {
+
+      $buffer="STAT\n";
+      fputs($mailserver, $buffer);
+      $buffer = fgets($mailserver, 512);
+      $mailsum = (int)substr($buffer, 4, 2);
+      $mailmem = (int)substr($buffer, 6, strlen($buffer)-6);
+
+
+      $buffer="QUIT\n";
+      fputs($mailserver, $buffer);
+      $buffer = fgets($mailserver, 512);
+
+      fclose($mailserver);
+
+      variable_set('checkmail_checked_time', time());
+      variable_set('checkmail_cache_num', $mailsum);
+      variable_set('checkmail_cache_mem', $mailmem);
+      return array($pop3_user, $pop3_server, $mailsum, $mailmem);
+    }
+    return;
+  }
+}
+
+/**
+ * Configuration options for setting mail server address, mail server port, username, and password
+ *
+ * @return array
+ */
+function checkmail_settings() {
+  if(!user_access('administer checkmail')) {
+    drupal_set_message(t('Access denied.'));
+    return;
+  }
+  $form['checkmail_pop3mail_server'] = array(
+    '#type' => 'textfield',
+    '#title' => t('POP3 email server'),
+    '#default_value' => variable_get('checkmail_pop3mail_server', ''),
+    '#size' => 55,
+    '#maxlength' => 128,
+    '#description' => t('Fill in your POP3 mailserver. (mail.example.com)'),
+    '#required' => true
+  );
+  $form['checkmail_pop3mail_port'] = array(
+    '#type' => 'textfield',
+    '#title' => t('POP3 email port'),
+    '#default_value' => variable_get('checkmail_pop3mail_port', 110),
+    '#size' => 55,
+    '#maxlength' => 128,
+    '#description' => t('Fill in your POP3 port (default: 110).')
+  );
+  $form['checkmail_pop3mail_user'] = array(
+    '#type' => 'textfield',
+    '#title' => t('POP3 email username'),
+    '#default_value' => variable_get('checkmail_pop3mail_user', ''),
+    '#size' => 55,
+    '#maxlength' => 128,
+    '#required' => true
+  );
+  $form['checkmail_pop3mail_password'] = array(
+    '#type' => 'password',
+    '#title' => t('POP3 email password'),
+    '#default_value' => variable_get('checkmail_pop3mail_password', ''),
+    '#size' => 55,
+    '#maxlength' => 128,
+    '#description' => t('Note, the stored password is not encrypted.'),
+    '#required' => true
+  );
+
+  return $form;
+}
+
+?>
