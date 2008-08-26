@@ -1,0 +1,4 @@
+; $Id$
+name = Checkmail
+description = "Displays statistical infomation about an e-mail mailbox."
+package = Mail

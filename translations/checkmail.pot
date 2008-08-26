@@ -1,0 +1,321 @@
+# $Id$
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  checkmail.module: n/a
+#  checkmail.info: n/a
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2008-08-24 17:57-0700\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: checkmail.module:25
+msgid "Displays statistical information about an e-mail inbox, including the number of messages and size of the mailbox."
+msgstr ""
+
+#: checkmail.module:52 checkmail.info:0
+msgid "Checkmail"
+msgstr ""
+
+#: checkmail.module:56
+msgid "Configure the settings for the mailbox to check."
+msgstr ""
+
+#: checkmail.module:60;312
+msgid "Check e-mail"
+msgstr ""
+
+#: checkmail.module:63
+msgid "Display the mailbox information."
+msgstr ""
+
+#: checkmail.module:82
+msgid "General settings"
+msgstr ""
+
+#: checkmail.module:86
+msgid "Show the number of messages in the inbox."
+msgstr ""
+
+#: checkmail.module:88
+msgid "Checking this will include the total number of messages in the inbox as part of the display."
+msgstr ""
+
+#: checkmail.module:92
+msgid "Show the number of recent (new) messages in the inbox."
+msgstr ""
+
+#: checkmail.module:94
+msgid "Checking this will include the total number of <em>recent (new)</em> messages in the inbox as part of the display. NOTE: This only works for IMAP servers."
+msgstr ""
+
+#: checkmail.module:98
+msgid "Show the number of unread messages in the inbox."
+msgstr ""
+
+#: checkmail.module:100
+msgid "Checking this will include the total number of <em>unread</em> messages in the inbox as part of the display. NOTE: This only works for IMAP servers."
+msgstr ""
+
+#: checkmail.module:104
+msgid "Show the total size of the mailbox."
+msgstr ""
+
+#: checkmail.module:106
+msgid "Checking this will include the total size of the mailbox as part of the display."
+msgstr ""
+
+#: checkmail.module:111
+msgid "Server settings"
+msgstr ""
+
+#: checkmail.module:116
+msgid "E-mail server type"
+msgstr ""
+
+#: checkmail.module:118
+msgid "IMAP"
+msgstr ""
+
+#: checkmail.module:118
+msgid "POP3"
+msgstr ""
+
+#: checkmail.module:122
+msgid "E-mail server name"
+msgstr ""
+
+#: checkmail.module:124
+msgid "Fill in your e-mail server's name (for example, mail.example.com)."
+msgstr ""
+
+#: checkmail.module:129
+msgid "E-mail server port"
+msgstr ""
+
+#: checkmail.module:133
+msgid "Fill in your e-mail server's port number. For POP3 servers, the default is 110. For IMAP servers, the default is 143. If you are using a secure connection with either SSL or TLS, the default for POP3 is  and for IMAP is , but check with your system administer for the correct number for your mail server."
+msgstr ""
+
+#: checkmail.module:139
+msgid "Secure login."
+msgstr ""
+
+#: checkmail.module:141
+msgid "Check this box to make a secure connection to the mail server."
+msgstr ""
+
+#: checkmail.module:145
+msgid "Validate certificate."
+msgstr ""
+
+#: checkmail.module:147
+msgid "Check this box to validate the certificate, when using a secure connection."
+msgstr ""
+
+#: checkmail.module:151
+msgid "Encrypt session using SSL."
+msgstr ""
+
+#: checkmail.module:153
+msgid "Check this box to use SSL when connecting to the server."
+msgstr ""
+
+#: checkmail.module:157
+msgid "Encrypt session using TLS."
+msgstr ""
+
+#: checkmail.module:159
+msgid "Check this box to use TLS when connecting to the server."
+msgstr ""
+
+#: checkmail.module:165
+msgid "User settings"
+msgstr ""
+
+#: checkmail.module:168
+msgid "Use the user's account e-mail address and password for checking e-mail. (Existing users will have to re-enter their password.)"
+msgstr ""
+
+#: checkmail.module:169
+msgid "Use additional fields in the user account to collect the login ID and password from each user."
+msgstr ""
+
+#: checkmail.module:170
+msgid "Use the login ID and password collected for another module, specified in the 'Module settings' fieldset below. (Depending on how the data is stored, existing users may have to re-enter their password.)"
+msgstr ""
+
+#: checkmail.module:171
+msgid "Use the form fields in the 'Log in settings' fieldset below for the login information. (All users allowed access will see the same information."
+msgstr ""
+
+#: checkmail.module:183
+msgid "Module settings"
+msgstr ""
+
+#: checkmail.module:190
+msgid "Log in settings"
+msgstr ""
+
+#: checkmail.module:196
+msgid "E-mail server log in ID"
+msgstr ""
+
+#: checkmail.module:203
+msgid "NOTE: The stored password is not encrypted."
+msgstr ""
+
+#: checkmail.module:322
+msgid "30 seconds"
+msgstr ""
+
+#: checkmail.module:322
+msgid "1 minute"
+msgstr ""
+
+#: checkmail.module:322
+msgid "5 minutes"
+msgstr ""
+
+#: checkmail.module:322
+msgid "10 minutes"
+msgstr ""
+
+#: checkmail.module:322
+msgid "15 minutes"
+msgstr ""
+
+#: checkmail.module:322
+msgid "30 minutes"
+msgstr ""
+
+#: checkmail.module:322
+msgid "1 hour"
+msgstr ""
+
+#: checkmail.module:322
+msgid "6 hours"
+msgstr ""
+
+#: checkmail.module:322
+msgid "12 hours"
+msgstr ""
+
+#: checkmail.module:322
+msgid "1 day"
+msgstr ""
+
+#: checkmail.module:325
+msgid "Cache"
+msgstr ""
+
+#: checkmail.module:328
+msgid "Cache the mail results for this amount of time before querying the server again."
+msgstr ""
+
+#: checkmail.module:357;358;359;360
+msgid "cache not set!"
+msgstr ""
+
+#: checkmail.module:368
+msgid "There are !mailsum !e-mail (!unread unread), totaling !mailmem KB."
+msgstr ""
+
+#: checkmail.module:368;372;378;389;393;398;425;428
+msgid "e-mail"
+msgstr ""
+
+#: checkmail.module:368;372;378;389;393;398;425;428
+msgid "e-mails"
+msgstr ""
+
+#: checkmail.module:372
+msgid "There are !mailsum !e-mail, totaling !mailmem KB."
+msgstr ""
+
+#: checkmail.module:378
+msgid "There are !unread unread !e-mail. The size of the mailbox is !mailmem KB."
+msgstr ""
+
+#: checkmail.module:382
+msgid "The size of the mailbox is !mailmem KB."
+msgstr ""
+
+#: checkmail.module:389
+msgid "There are !mailsum !e-mail (!unread unread)."
+msgstr ""
+
+#: checkmail.module:393
+msgid "There are !mailsum !e-mail."
+msgstr ""
+
+#: checkmail.module:398
+msgid "There are !unread unread !e-mail."
+msgstr ""
+
+#: checkmail.module:406;435
+msgid "There was a problem checking the mailbox. Please check the logs for errors, correct them and try again."
+msgstr ""
+
+#: checkmail.module:425
+msgid "!account has !mailsum !e-mail (!unread of them are unread)."
+msgstr ""
+
+#: checkmail.module:428
+msgid "!account has !mailsum !e-mail."
+msgstr ""
+
+#: checkmail.module:431
+msgid "The total size of the inbox is !mailmem KB."
+msgstr ""
+
+#: checkmail.module:483
+msgid "There is no login ID configured for user !user."
+msgstr ""
+
+#: checkmail.module:492
+msgid "Cannot connect to mailserver: !server. Connection error: !errno: !errstr."
+msgstr ""
+
+#: checkmail.module:508
+msgid "Invalid password or username for checking !account"
+msgstr ""
+
+#: checkmail.module:569
+msgid "There was an error accessing the remote server: "
+msgstr ""
+
+#: checkmail.module:591
+msgid "An invalid server type was specified when calling the _checkmail() function: \"!server_type\""
+msgstr ""
+
+#: checkmail.module:479;484;493;509;570;592;0
+msgid "checkmail"
+msgstr ""
+
+#: checkmail.module:38
+msgid "access checkmail"
+msgstr ""
+
+#: checkmail.module:38
+msgid "administer checkmail"
+msgstr ""
+
+#: checkmail.info:0
+msgid "Displays statistical infomation about an e-mail mailbox."
+msgstr ""
+
+#: checkmail.info:0
+msgid "Mail"
+msgstr ""
+

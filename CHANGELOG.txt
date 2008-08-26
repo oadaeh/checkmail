@@ -1,0 +1,22 @@
+$Id$
+
+2008-08-25 Jason Flatt drupal@oadaeh.net
+  * checkmail.module: Added hook_user() code.
+    Filled out more of the admin settings page (still more to go).
+    Modified _checkmail() to use the correct authentication method.
+
+2008-08-24 Jason Flatt drupal@oadaeh.net
+  * CHANGELOG.txt: Added this file.
+    INSTALL.txt, README.txt: Updated with newer information.
+
+2008-08-20 Jason Flatt drupal@oadaeh.net
+  * checkmail.module: Added a bunch of new features, which is amazing for a
+    module of this size.
+
+2008-08-20 Jason Flatt drupal@oadaeh.net
+  * checkmail.info, checkmail.install, checkmail.module: Bagan the upgrade to
+    Drupal 5.x compatibility.
+
+Way back in the depths of time, this module was created by Stefan Nagtegaal
+(d.o uid 612) and later updated to DRUAPL-4-0 by Kristjan Jansen (d.o uid 11)
+and later updated to DRUAPL-4-7 by David Kent Norman (d.o uid 972).

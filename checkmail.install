@@ -1,0 +1,30 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * The uninstall file for Checkmail, which removes it's variables.
+ *
+ * This module generates a page and a block for a single user which prints the
+ * number and size of messages in a POP3 e-mail account.
+ */
+
+function checkmail_uninstall() {
+  variable_del('checkmail_account_info');
+  variable_del('checkmail_block_cache');
+  variable_del('checkmail_block_subject');
+  variable_del('checkmail_cache_mem');
+  variable_del('checkmail_cache_num');
+  variable_del('checkmail_checked_time');
+  variable_del('checkmail_encrypt_session');
+  variable_del('checkmail_login_id');
+  variable_del('checkmail_login_password');
+  variable_del('checkmail_number_of_messages');
+  variable_del('checkmail_number_of_unread_messages');
+  variable_del('checkmail_secure_log_in');
+  variable_del('checkmail_server_address');
+  variable_del('checkmail_server_port');
+  variable_del('checkmail_server_type');
+  variable_del('checkmail_size_of_mailbox');
+  variable_del('checkmail_validate_cert');
+}

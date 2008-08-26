@@ -3,249 +3,607 @@
 
 /**
  * @file
- * Generates a page for a single user to check a POP3 email account for new mail.
+ * The main file for Checkmail, which displays statistical information about a mailbox.
+ *
+ * This module generates a page and/or a block, which displays statistical
+ * information about an e-mail inbox, including the number of messages and
+ * size of the mailbox.
  *
  * @author Stefan Nagtegaal <Stefan at: Sempre-Crescendo.nl>
+ * @author Kristjan Jansen
  * @author David Kent Norman <deekayen at: deekayen {dot} net>
+ * @author Jason Flatt http://drupal.org/user/4649
  */
 
+
 /**
- * Help hook
- *
- * @param string $section
- * @return string
+ * Implementation of hook_help().
  */
 function checkmail_help($section) {
   switch ($section) {
-    case 'admin/modules#description':
-      return t('Let admins see if there is mail in the pop3-mailbox.');
-    case 'admin/settings/checkmail':
-      return t('Configuration to check a single POP3 email account for new mail.');
+    case 'admin/help#checkmail':
+      $help_text = t('Displays statistical information about an e-mail inbox, including the number of messages and size of the mailbox.');
+      break;
   }
-}
+
+  return $help_text;
+}  //  End of checkmail_help().
+
+
 
 /**
- * Menu hook
- *
- * @param unknown_type $may_cache
- * @return unknown
+ * Implementation of hook_perm().
+ */
+function checkmail_perm() {
+  return array('access checkmail', 'administer checkmail');
+}  //  End of checkmail_perm().
+
+
+
+/**
+ * Implementation of hook_menu().
  */
 function checkmail_menu($may_cache) {
-  global $user;
   $items = array();
-  $access = user_access('access check email');
 
   if ($may_cache) {
-    $items[] = array('path' => 'checkmail', 'title' => t('check email'),
-                     'callback' => 'checkmail_page', 'access' => $access);
+    $items[] = array(
+      'path'               => 'admin/settings/checkmail',
+      'title'              => t('Checkmail'),
+      'access'             => user_access('administer checkmail'),
+      'callback'           => 'drupal_get_form',
+      'callback arguments' => 'checkmail_admin_settings',
+      'description'        => t('Configure the settings for the mailbox to check.'),
+    );
+    $items[] = array(
+      'path'        => 'checkmail',
+      'title'       => t('Check e-mail'),
+      'access'      => user_access('access checkmail'),
+      'callback'    => 'checkmail_page',
+      'description' => t('Display the mailbox information.'),
+    );
   }
-  return $items;
-}
 
-function checkmail_perm() {
-  return array('access check email', 'administer checkmail');
-}
+  return $items;
+}  //  End of checkmail_menu().
+
+
 
 /**
- * Block display and configuration
+ * Configuration options for setting mail server address, mail server port,
+ * username, and password.
  *
- * @param string $op
- * @param integer $delta
- * @param array $edit
- * @return mixed
+ * @return
+ *   The generated form.
+ */
+function checkmail_admin_settings() {
+  $form['checkmail_general_settings'] = array(
+    '#type'  => 'fieldset',
+    '#title' => t('General settings'),
+  );
+  $form['checkmail_general_settings']['checkmail_number_of_messages'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t("Show the number of messages in the inbox."),
+    '#default_value' => variable_get('checkmail_number_of_messages', 1),
+    '#description'   => t("Checking this will include the total number of messages in the inbox as part of the display."),
+  );
+  $form['checkmail_general_settings']['checkmail_number_of_recent_messages'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t("Show the number of recent (new) messages in the inbox."),
+    '#default_value' => variable_get('checkmail_number_of_recent_messages', 1),
+    '#description'   => t("Checking this will include the total number of <em>recent (new)</em> messages in the inbox as part of the display. NOTE: This only works for IMAP servers."),
+  );
+  $form['checkmail_general_settings']['checkmail_number_of_unread_messages'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t("Show the number of unread messages in the inbox."),
+    '#default_value' => variable_get('checkmail_number_of_unread_messages', 1),
+    '#description'   => t("Checking this will include the total number of <em>unread</em> messages in the inbox as part of the display. NOTE: This only works for IMAP servers."),
+  );
+  $form['checkmail_general_settings']['checkmail_size_of_mailbox'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t("Show the total size of the mailbox."),
+    '#default_value' => variable_get('checkmail_size_of_mailbox', 1),
+    '#description'   => t("Checking this will include the total size of the mailbox as part of the display."),
+  );
+
+  $form['checkmail_server_settings'] = array(
+    '#type'  => 'fieldset',
+    '#title' => t('Server settings'),
+  );
+  // Collect basic server information.
+  $form['checkmail_server_settings']['checkmail_server_type'] = array(
+    '#type'          => 'select',
+    '#title'         => t('E-mail server type'),
+    '#default_value' => variable_get('checkmail_server_type', 0),
+    '#options'       => array('imap' => t('IMAP'), 'pop3' => t('POP3')),
+  );
+  $form['checkmail_server_settings']['checkmail_server_address'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('E-mail server name'),
+    '#default_value' => variable_get('checkmail_server_address', ''),
+    '#description'   => t("Fill in your e-mail server's name (for example, mail.example.com)."),
+    '#required'      => TRUE,
+  );
+  $form['checkmail_server_settings']['checkmail_server_port'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('E-mail server port'),
+    '#default_value' => variable_get('checkmail_server_port', ''),
+    '#size'          => 10,
+    '#maxlength'     => 10,
+    '#description'   => t("Fill in your e-mail server's port number. For POP3 servers, the default is 110. For IMAP servers, the default is 143. If you are using a secure connection with either SSL or TLS, the default for POP3 is  and for IMAP is , but check with your system administer for the correct number for your mail server."),
+    '#required'      => TRUE,
+  );
+  // Collect advanced server information.
+  $form['checkmail_server_settings']['checkmail_secure_log_in'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Secure login.'),
+    '#default_value' => variable_get('checkmail_secure_log_in', 0),
+    '#description'   => t('Check this box to make a secure connection to the mail server.'),
+  );
+  $form['checkmail_server_settings']['checkmail_validate_cert'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Validate certificate.'),
+    '#default_value' => variable_get('checkmail_validate_cert', 0),
+    '#description'   => t('Check this box to validate the certificate, when using a secure connection.'),
+  );
+  $form['checkmail_server_settings']['checkmail_use_ssl'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Encrypt session using SSL.'),
+    '#default_value' => variable_get('checkmail_use_ssl', 0),
+    '#description'   => t('Check this box to use SSL when connecting to the server.'),
+  );
+  $form['checkmail_server_settings']['checkmail_use_tls'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Encrypt session using TLS.'),
+    '#default_value' => variable_get('checkmail_use_tls', 0),
+    '#description'   => t('Check this box to use TLS when connecting to the server.'),
+  );
+
+  // Collect user information.
+  $form['checkmail_authentication_settings'] = array(
+    '#type'  => 'fieldset',
+    '#title' => t('Authentication settings'),
+  );
+  $options = array(
+    'user_account'    => t("Use the user's account e-mail address and password for checking e-mail. (Existing users will have to re-enter their password.)"),
+    'user_fields'     => t('Use additional fields in the user account to collect the login ID and password from each user.'),
+//    'module_settings' => t("Use the login ID and password collected for another module, specified in the 'Module settings' fieldset below. (Depending on how the data is stored, existing users may have to re-enter their password.)"),
+    'admin_fields'    => t("Use the form fields in the 'Log in settings' fieldset below for the login information. (All users allowed access will see the same information."),
+  );
+  $form['checkmail_authentication_settings']['checkmail_account_info'] = array(
+    '#type'          => 'radios',
+    '#options'       => $options,
+    '#default_value' => variable_get('checkmail_account_info', 'user_account'),
+  );
+
+//  $form['checkmail_authentication_settings']['checkmail_option_three'] = array(
+//    '#type'        => 'fieldset',
+//    '#title'       => t('Module settings'),
+//    '#collapsible' => TRUE,
+//    '#collapsed'   => TRUE,
+//  );
+
+  $form['checkmail_authentication_settings']['checkmail_option_four'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('Log in settings'),
+    '#collapsible' => TRUE,
+    '#collapsed'   => TRUE,
+  );
+  $form['checkmail_authentication_settings']['checkmail_option_four']['checkmail_login_id'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('E-mail server log in ID'),
+    '#default_value' => variable_get('checkmail_login_id', ''),
+  );
+  $form['checkmail_authentication_settings']['checkmail_option_four']['checkmail_login_password'] = array(
+    '#type'          => 'password_confirm',
+    '#default_value' => variable_get('checkmail_login_password', ''),
+    '#description'   => t('NOTE: The stored password is not encrypted.'),
+  );
+
+  return system_settings_form($form);
+}  //  End of checkmail_admin_settings().
+
+
+
+/**
+ * Provides extra validation for the administrative settings form.
+ *
+ * @param form_id
+ *   A unique string identifying the form.
+ * @param form_values
+ *   The contents of the form fields.
+ */
+function checkmail_admin_settings_validate($form_id, $form_values) {
+  if ($form_values['checkmail_account_info'] == 'admin_fields') {
+    if ($form_values['checkmail_login_id'] == '') {
+      form_set_error('checkmail_login_id', t('You must provide a log in ID.'));
+    }
+    if ($form_values['checkmail_login_password'] == '') {
+      form_set_error('checkmail_login_password', t('You must provide a password.'));
+    }
+  }
+}  //  End of checkmail_admin_settings_validate().
+
+
+
+/**
+ * Implementation of hook_user().
+ *
+ * @TODO: change this module to be on a per user basis.
+ */
+function checkmail_user($op, &$edit, &$account, $category = NULL) {
+  switch ($op) {
+    case 'form':
+      if ($category == 'account' && user_access('access checkmail') && variable_get('checkmail_account_info', '') == 'user_fields') {
+        $form['checkmail_authentication_settings'] = array(
+          '#type'        => 'fieldset',
+          '#title'       => t('Checkmail authentication settings'),
+          '#collapsible' => TRUE,
+          '#weight'      => 1,
+        );
+        $form['checkmail_authentication_settings']['checkmail_username'] = array(
+          '#type'          => 'textfield',
+          '#title'         => t('E-mail account log in ID'),
+          '#default_value' => $account->checkmail_username,
+          '#description'   => t('The login id for your e-mail account.'),
+          '#required'      => TRUE,
+        );
+        $form['checkmail_authentication_settings']['checkmail_passsword'] = array(
+          '#type'        => 'password_confirm',
+          '#description' => t('The password for your e-mail account. NOTE: The password is stored unencrypted in the database.'),
+        );
+      }
+      return $form;
+      break;
+
+    case 'insert':
+      if (variable_get('checkmail_account_info', '') == 'user_account') {
+        $edit['checkmail_username']  = $edit['mail'];
+        $edit['checkmail_passsword'] = $edit['pass'];
+      }
+      break;
+
+    case 'register':
+      if (user_access('access checkmail') && !variable_get('checkmail_account_info', 1)) {
+        $form['checkmail_email_settings'] = array(
+          '#type'        => 'fieldset',
+          '#title'       => t('Basic webmail account settings'),
+          '#collapsible' => TRUE,
+          '#weight'      => 1,
+        );
+        $form['checkmail_email_settings']['checkmail_username'] = array(
+          '#type'          => 'textfield',
+          '#title'         => t('E-mail account login'),
+          '#default_value' => $account->checkmail_username,
+          '#description'   => t('The login id for your e-mail account.'),
+          '#required'      => TRUE,
+        );
+        $form['checkmail_email_settings']['checkmail_passsword'] = array(
+          '#type'        => 'password_confirm',
+          '#description' => t('The password for your e-mail account. NOTE: The password is stored unencrypted in the database.'),
+        );
+      }
+      return $form;
+      break;
+
+    case 'update':
+      if ($category == 'account' && variable_get('checkmail_account_info', '') == 'user_account') {
+        if ($edit['mail'] != $account->mail) {
+          $edit['checkmail_username'] = $edit['mail'];
+        }
+        else {
+          $edit['checkmail_username'] = $account->mail;
+        }
+
+        if ($edit['pass'] != '') {
+          $edit['checkmail_passsword'] = $edit['pass'];
+        }
+        else {
+          $edit['checkmail_passsword'] = $account->checkmail_passsword;
+        }
+      }
+      break;
+  }
+}  //  End of checkmail_user().
+
+
+
+/**
+ * Implementation of hook_block().
  */
 function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
   $block = $blocks = array();
-  switch($op) {
+  switch ($op) {
     case 'list':
       if (user_access('administer checkmail')) {
-        $blocks[0]['info'] = t('Check email');
+        $blocks[0]['info'] = t('Check e-mail');
         return $blocks;
       }
       break;
+
     case 'configure':
+/**
+ * @TODO: Add options for display of text and quick access to seeing the e-mails.
+ */
       if (user_access('administer checkmail')) {
-        $form['block_subject'] = array(
-          '#type' => 'textfield',
-          '#title' => t('Block title'),
-          '#default_value' => variable_get('checkmail_block_subject', 'check email'),
-          '#size' => 60,
-          '#maxlength' => 128,
-          '#required' => false
-        );
+        $cache_options = array('no cache', 30 => t('30 seconds'), 60 => t('1 minute'), 300 => t('5 minutes'), 600 => t('10 minutes'), 900 => t('15 minutes'), 1800 => t('30 minutes'), 3600 => t('1 hour'), 21600 => t('6 hours'), 43200 => t('12 hours'), 86400 => t('1 day'));
         $form['block_cache'] = array(
-          '#type' => 'select',
-          '#title' => t('Cache'),
+          '#type'          => 'select',
+          '#title'         => t('Cache'),
           '#default_value' => variable_get('checkmail_block_cache', 60),
-          '#options' => array('no cache', 30 => t('30 seconds'), 60 => t('1 minute'), 300 => t('5 minutes'), 600 => t('10 minutes'), 900 => t('15 minutes'), 1800 => t('30 minutes'), 3600 => t('1 hour'), 21600 => t('6 hours'), 43200 => t('12 hours'), 86400 => t('1 day')),
-          '#description' => t('Cache the mail results for this amount of time before querying the server again.'),
-          '#required' => false
+          '#options'       => $cache_options,
+          '#description'   => t('Cache the mail results for this amount of time before querying the server again.'),
+          '#required'      => FALSE,
         );
         return $form;
       }
       break;
+
     case 'save':
       if (user_access('administer checkmail')) {
-        if($delta == 0) {
+        if ($delta == 0) {
           variable_set('checkmail_block_subject', $edit['block_subject']);
           variable_set('checkmail_block_cache', $edit['block_cache']);
         }
       }
       break;
+
     case 'view': default:
-      switch($delta) {
+      switch ($delta) {
         case 0:
-          if (user_access('access check email')) {
-            $time = time();
-            $cache = variable_get('checkmail_block_cache', 60);
-            $last_check = variable_get('checkmail_checked_time', $time);
-            if((!$cache || $time == $last_check) || ($cache > 0 && $time > $last_check+$cache)) {
-              $mail = _checkmail();
+          $time = time();
+          $cache = variable_get('checkmail_block_cache', 60);
+          $last_check = variable_get('checkmail_checked_time', $time);
+
+          if ((!$cache || $time == $last_check) || ($cache > 0 && $time > $last_check + $cache)) {
+            $mail = _checkmail();
+          }
+          else {
+            $mail = array();
+            $mail['status']   = 'success';
+            $mail['messages'] = variable_get('checkmail_cache_num', t('cache not set!'));
+            $mail['size']     = variable_get('checkmail_cache_mem', t('cache not set!'));
+            $mail['recent']   = variable_get('checkmail_cache_recent', t('cache not set!'));
+            $mail['unread']   = variable_get('checkmail_cache_unread', t('cache not set!'));
+          }
+
+          if ($mail['status'] == 'success') {
+            if (variable_get('checkmail_size_of_mailbox', 1)) {
+              if (variable_get('checkmail_number_of_messages', 1)) {
+                if (variable_get('checkmail_number_of_unread_messages', 1)) {
+                  // print everything
+                  $block['content'] = t('There are !mailsum !e-mail (!unread unread), totaling !mailmem KB.', array('!mailsum' => $mail['messages'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails'), '!unread' => $mail['unread'], '!mailmem' => sprintf("%01.2f", $mail['size'] ? $mail['size']/1024 : $mail['size'])));
+                }
+                else {
+                  // print messages and size
+                  $block['content'] = t('There are !mailsum !e-mail, totaling !mailmem KB.', array('!mailsum' => $mail['messages'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails'), '!mailmem' => sprintf("%01.2f", $mail['size'] ? $mail['size']/1024 : $mail['size'])));
+                }
+              }
+              else {
+                if (variable_get('checkmail_number_of_unread_messages', 1)) {
+                  // print unread and size
+                  $block['content'] = t('There are !unread unread !e-mail. The size of the mailbox is !mailmem KB.', array('!unread' => $mail['unread'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails'), '!mailmem' => sprintf("%01.2f", $mail['size'] ? $mail['size']/1024 : $mail['size'])));
+                }
+                else {
+                  // print size only
+                  $block['content'] = t('The size of the mailbox is !mailmem KB.', array('!mailmem' => sprintf("%01.2f", $mail['size'] ? $mail['size']/1024 : $mail['size'])));
+                }
+              }
+            }
+            elseif (variable_get('checkmail_number_of_messages', 1)) {
+              if (variable_get('checkmail_number_of_unread_messages', 1)) {
+                // print messages and unread
+                $block['content'] = t('There are !mailsum !e-mail (!unread unread).', array('!mailsum' => $mail['messages'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails'), '!unread' => $mail['unread']));
+              }
+              else {
+                // print messages only
+                $block['content'] = t('There are !mailsum !e-mail.', array('!mailsum' => $mail['messages'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails')));
+              }
+            }
+            elseif (variable_get('checkmail_number_of_unread_messages', 1)) {
+              // print unread only
+              $block['content'] = t('There are !unread unread !e-mail.', array('!unread' => $mail['unread'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails')));
             }
             else {
-              $mail = array();
-              $mail[2] = variable_get('checkmail_cache_num', t('cache not set!'));
-              $mail[3] = variable_get('checkmail_cache_mem', t('cache not set!'));
+              // print nothing
+              $block['content'] = 'No information was selected to display.';
             }
-
-            $block['subject'] = variable_get('checkmail_block_subject', 'check mail');
-            $block['content'] = t('%mailsum %email; %mailmem KB', array('%mailsum' => $mail[2], '%email' => $mail[2] == 1 ? t('email') : t('emails'), '%mailmem' => sprintf("%01.2f", $mail[3] ? $mail[3]/1024 : $mail[3])));
           }
+          else {
+            $block['content'] = t('There was a problem checking the mailbox. Please check the logs for errors, correct them and try again.');
+          }
+
           break;
       }
+
       return $block;
   }
-}
+}  //  End of checkmail_block().
+
+
 
 /**
  * Generates the output when the menu link is clicked
  */
 function checkmail_page() {
-  if (user_access('access check email')) {
-    $mail = _checkmail();
-    $output = '<p>'. t('%account has %mailsum %email.', array('%account' => "{$mail[0]}@{$mail[1]}", '%mailsum' => $mail[2], '%email' => $mail[2] == 1 ? t('email') : t('emails')));
-    $output .= '<br />'. t('Total size of inbox: %mailmem KB.', array('%mailmem' => sprintf("%01.2f", $mail[3] ? $mail[3]/1024 : $mail[3]))) .'</p>';
-    echo theme('page', $output);
+  $mail = _checkmail();
+  if ($mail['status'] == 'success') {
+    if (variable_get('checkmail_number_of_messages', 1) && variable_get('checkmail_number_of_unread_messages', 1)) {
+      $output = '<p>'. t('!account has !mailsum !e-mail (!unread of them are unread).', array('!account' => $mail['login_id'], '!mailsum' => $mail['messages'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails'), '!unread' => $mail['unread']));
+    }
+    elseif (variable_get('checkmail_number_of_messages', 1) && !variable_get('checkmail_number_of_unread_messages', 1)) {
+      $output = '<p>'. t('!account has !mailsum !e-mail.', array('!account' => $mail['login_id'], '!mailsum' => $mail['messages'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails')));
+    }
+    if (variable_get('checkmail_size_of_mailbox', 1)) {
+      $output .= '<br />'. t('The total size of the inbox is !mailmem KB.', array('!mailmem' => sprintf("%01.2f", $mail['size'] ? $mail['size']/1024 : $mail['size']))) .'</p>';
+    }
   }
-}
+  else {
+    $output = '<p>'. t('There was a problem checking the mailbox. Please check the logs for errors, correct them and try again.') .'</p>';
+  }
+
+  echo theme('page', $output);
+}  //  End of checkmail_page().
+
+
 
 /**
- * Check the POP3 server and set cache
+ * Check the server and set the cache.
  *
- * @return array
- *  0 = pop3 user
- *  1 = pop3 server
- *  2 = number of emails
- *  3 = size of inbox in bytes
+ * @return
+ *   An associated array in the following format:
+ *     Array(
+ *       'status'      => 'failure',    // This will be either 'failure' or
+ *                                      // 'success'.
+ *       'server_type' => $server_type,
+ *       'login_id'    => $login_id,
+ *       'messages'    => 0,            // The total number of messages.
+ *       'recent'      => 0,            // The number of recent (new) messages
+ *                                      // (IMAP only).
+ *       'unread'      => 0,            // The number of unread messages
+ *                                      // (IMAP only).
+ *       'size'        => 0             // The total size of the mailbox.
+ *     )
  */
 function _checkmail() {
-  $output = '';
-  $pop3_server = variable_get('checkmail_pop3mail_server', '');
-  $pop3_port = (int)variable_get('checkmail_pop3mail_port', 110);
-  $pop3_user = variable_get('checkmail_pop3mail_user', '');
-  $pop3_password = variable_get('checkmail_pop3mail_password', '');
+  // Initialize the server variables.
+  $server_type    = variable_get('checkmail_server_type', 'pop3');
+  $server_address = variable_get('checkmail_server_address', '');
+  $server_port    = (int)variable_get('checkmail_server_port', 110);
 
-  if(empty($pop3_server)) {
-    drupal_set_message(t('POP3 server is not configured!'));
-    return;
+  // Initialize the user variables.
+  $auth_method = variable_get('checkmail_account_info', '');
+  if ($auth_method == 'user_account' || $auth_method == 'user_fields') {
+    global $user;
+    $login_id       = $user->checkmail_username;
+    $login_password = $user->checkmail_passsword;
   }
-  if(empty($pop3_user)) {
-    drupal_set_message(t('POP3 user is not configured!'));
-    return;
+  elseif ($auth_method == 'admin_fields') {
+    $login_id       = variable_get('checkmail_login_id', '');
+    $login_password = variable_get('checkmail_login_password', '');
   }
 
-  $mailserver = fsockopen($pop3_server, $pop3_port, $errno, $errstr, 30);
-  if(!$mailserver) {
-    drupal_set_message(t("Can't connect to mailserver %server"), array('%server' => $pop3_server));
-    watchdog('checkmail', "Connection error! $errno: $errstr", WATCHDOG_ERROR);
-  } else {
+  // Set the initial return value.
+  $ret_val = array('status' => 'failure', 'server_type' => $server_type, 'login_id' => $login_id, 'messages' => 0, 'recent' => 0, 'unread' => 0, 'size' => 0);
 
-    $buffer=fgets($mailserver,512);
+  // Error checking.
+  if (empty($server_address)) {
+    watchdog('checkmail', 'The e-mail server address is not configured in the administrative settings.', WATCHDOG_ERROR);
+    return $ret_val;
+  }
+  if (empty($login_id)) {
+    $error_message = t('There is no login ID configured for user !user.', array('!user' => $user->name));
+    watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+    return $ret_val;
+  }
 
-    $buffer="USER $pop3_user\n";
-    fputs($mailserver, $buffer);
-    $buffer=fgets($mailserver, 512);
+  switch ($server_type) {
+    case 'pop3':
+      $mailserver = fsockopen($server_address, $server_port, $errno, $errstr, 30);
+      if (!$mailserver) {
+        $error_message = t('Cannot connect to mailserver: !server. Connection error: !errno: !errstr.', array('!server' => $server_address, '!errno' => $errno, '!errstr' => $errstr));
+        watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+      }
+      else {
+        $buffer = fgets($mailserver, 512);
 
-    $buffer="PASS $pop3_password\n";
-    fputs($mailserver, $buffer);
+        $buffer = "USER $login_id\n";
+        fputs($mailserver, $buffer);
+        $buffer = fgets($mailserver, 512);
 
-    $buffer=fgets($mailserver, 512);
+        $buffer = "PASS $login_password\n";
+        fputs($mailserver, $buffer);
 
-    if (substr($buffer, 0, 4) == '-ERR') {
-      drupal_set_message(t('Invalid password or username for checking %account'), array('%account' => "$pop3_user@$pop3_server"));
-      drupal_set_message(t('Go to administer > settings > checkmail and re-configure your mail settings'));
-      fclose($mailserver);
+        $buffer = fgets($mailserver, 512);
 
-    } else {
+        if (substr($buffer, 0, 4) == '-ERR') {
+          $error_message = t('Invalid password or username for checking !account', array('!account' => $login_id));
+          watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+          fclose($mailserver);
+        }
+        else {
+          $buffer = "STAT\n";
+          fputs($mailserver, $buffer);
+          $buffer = fgets($mailserver, 512);
 
-      $buffer="STAT\n";
-      fputs($mailserver, $buffer);
-      $buffer = fgets($mailserver, 512);
-      $mailsum = (int)substr($buffer, 4, 2);
-      $mailmem = (int)substr($buffer, 6, strlen($buffer)-6);
+// Debugging code:
+//drupal_set_message('$buffer = "'. $buffer .'"');
 
+          $mailsum = (int)substr($buffer, 4, 2);
+          $mailmem = (int)substr($buffer, 6, drupal_strlen($buffer) - 6);
 
-      $buffer="QUIT\n";
-      fputs($mailserver, $buffer);
-      $buffer = fgets($mailserver, 512);
+          $buffer = "QUIT\n";
+          fputs($mailserver, $buffer);
+          $buffer = fgets($mailserver, 512);
 
-      fclose($mailserver);
+          fclose($mailserver);
+
+          variable_set('checkmail_checked_time', time());
+          variable_set('checkmail_cache_num', $mailsum);
+          variable_set('checkmail_cache_mem', $mailmem);
+
+          $ret_val['status']   = 'success';
+          $ret_val['messages'] = $mailsum;
+          $ret_val['size']     = $mailmem;
+        }
+      }
+
+      break;
+
+    case 'imap':
+      // Prepare the flags for connecting to the server with.
+      $imap_flags = '';
+      if (variable_get('checkmail_secure_log_in', 0) == 1) {
+        $imap_flags .= '/secure';
+      }
+      if (variable_get('checkmail_validate_cert', 0) == 1) {
+        $imap_flags .= '/validate-cert';
+      }
+      else {
+        $imap_flags .= '/novalidate-cert';
+      }
+      if (variable_get('checkmail_use_ssl', 0) == 1) {
+        $imap_flags .= '/ssl';
+      }
+      if (variable_get('checkmail_use_tls', 0) == 1) {
+        $imap_flags .= '/tls';
+      }
+      else {
+        $imap_flags .= '/notls';
+      }
+
+      $server_string = '{'. $server_address .':'. $server_port . $imap_flags .'}';
+
+// Debugging code:
+//drupal_set_message('Server settings: $server_address = "'. $server_address .'"; $server_port = "'. $server_port .'"; $login_id = "'. $login_id .'"; $login_password = "'. $login_password .'"; $imap_flags = "'. $imap_flags .'"; $server_string = "'. $server_string .'"');
+
+      if (($imap_resource = imap_open($server_string, $login_id, $login_password, 0)) == FALSE) {
+        $error_message = t('There was an error accessing the remote server: ') . imap_last_error();
+        watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+        return $ret_val;
+      }
+
+      $imap_status = imap_mailboxmsginfo($imap_resource);
+      imap_close($imap_resource);
 
       variable_set('checkmail_checked_time', time());
-      variable_set('checkmail_cache_num', $mailsum);
-      variable_set('checkmail_cache_mem', $mailmem);
-      return array($pop3_user, $pop3_server, $mailsum, $mailmem);
-    }
-    return;
+      variable_set('checkmail_cache_num', $imap_status->Nmsgs);
+      variable_set('checkmail_cache_recent', $imap_status->Recent);
+      variable_set('checkmail_cache_unread', $imap_status->Unread);
+      variable_set('checkmail_cache_mem', $imap_status->Size);
+
+      $ret_val['status']   = 'success';
+      $ret_val['messages'] = $imap_status->Nmsgs;
+      $ret_val['recent']   = $imap_status->Recent;
+      $ret_val['unread']   = $imap_status->Unread;
+      $ret_val['size']     = $imap_status->Size;
+      break;
+
+    default:
+      $error_message = t('An invalid server type was specified when calling the _checkmail() function: "!server_type"', array('!server_type' => $server_type));
+      watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+      break;
   }
-}
 
-/**
- * Configuration options for setting mail server address, mail server port, username, and password
- *
- * @return array
- */
-function checkmail_settings() {
-  if(!user_access('administer checkmail')) {
-    drupal_set_message(t('Access denied.'));
-    return;
-  }
-  $form['checkmail_pop3mail_server'] = array(
-    '#type' => 'textfield',
-    '#title' => t('POP3 email server'),
-    '#default_value' => variable_get('checkmail_pop3mail_server', ''),
-    '#size' => 55,
-    '#maxlength' => 128,
-    '#description' => t('Fill in your POP3 mailserver. (mail.example.com)'),
-    '#required' => true
-  );
-  $form['checkmail_pop3mail_port'] = array(
-    '#type' => 'textfield',
-    '#title' => t('POP3 email port'),
-    '#default_value' => variable_get('checkmail_pop3mail_port', 110),
-    '#size' => 55,
-    '#maxlength' => 128,
-    '#description' => t('Fill in your POP3 port (default: 110).')
-  );
-  $form['checkmail_pop3mail_user'] = array(
-    '#type' => 'textfield',
-    '#title' => t('POP3 email username'),
-    '#default_value' => variable_get('checkmail_pop3mail_user', ''),
-    '#size' => 55,
-    '#maxlength' => 128,
-    '#required' => true
-  );
-  $form['checkmail_pop3mail_password'] = array(
-    '#type' => 'password',
-    '#title' => t('POP3 email password'),
-    '#default_value' => variable_get('checkmail_pop3mail_password', ''),
-    '#size' => 55,
-    '#maxlength' => 128,
-    '#description' => t('Note, the stored password is not encrypted.'),
-    '#required' => true
-  );
-
-  return $form;
-}
-
-?>
+  return $ret_val;
+}  //  End of _checkmail().
