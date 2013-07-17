@@ -1,8 +1,9 @@
 <?php
-
 /**
  * @file
- * The main file for Checkmail, which displays statistical information about a mailbox.
+ * The main file for Checkmail.
+ *
+ * The Checkmail module displays statistical information about a user's mailbox.
  *
  * This module generates a page and/or a block, which displays statistical
  * information about an e-mail inbox, including the number of messages and
@@ -14,19 +15,18 @@
  * @author Jason Flatt http://drupal.org/user/4649
  */
 
-
 /**
  * Implementation of hook_help().
  */
-function checkmail_help($section) {
-  switch ($section) {
+function checkmail_help($path, $arg) {
+  switch ($path) {
     case 'admin/help#checkmail':
       $help_text = t('Displays statistical information about an e-mail inbox, including the number of messages and size of the mailbox.');
       break;
   }
 
   return $help_text;
-}  //  End of checkmail_help().
+}
 
 
 
@@ -35,42 +35,37 @@ function checkmail_help($section) {
  */
 function checkmail_perm() {
   return array('access checkmail', 'administer checkmail');
-}  //  End of checkmail_perm().
+}
 
 
 
 /**
  * Implementation of hook_menu().
  */
-function checkmail_menu($may_cache) {
+function checkmail_menu() {
   $items = array();
 
-  if ($may_cache) {
-    $items[] = array(
-      'path'               => 'admin/settings/checkmail',
-      'title'              => t('Checkmail'),
-      'access'             => user_access('administer checkmail'),
-      'callback'           => 'drupal_get_form',
-      'callback arguments' => 'checkmail_admin_settings',
-      'description'        => t('Configure the settings for the mailbox to check.'),
-    );
-    $items[] = array(
-      'path'        => 'checkmail',
-      'title'       => t('Check e-mail'),
-      'access'      => user_access('access checkmail'),
-      'callback'    => 'checkmail_page',
-      'description' => t('Display the mailbox information.'),
-    );
-  }
+  $items['admin/settings/checkmail'] = array(
+    'title' => 'Checkmail',
+    'access arguments' => array('administer checkmail'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('checkmail_admin_settings'),
+    'description' => 'Configure the settings for the mailbox to check.',
+  );
+  $items['checkmail'] = array(
+    'title' => 'Check e-mail',
+    'access arguments' => array('access checkmail'),
+    'page callback' => 'checkmail_page',
+    'description' => 'Display the mailbox information.',
+  );
 
   return $items;
-}  //  End of checkmail_menu().
+}
 
 
 
 /**
- * Configuration options for setting mail server address, mail server port,
- * username, and password.
+ * Set administrative configuration options.
  *
  * @return
  *   The generated form.
@@ -167,7 +162,7 @@ function checkmail_admin_settings() {
     'user_account'    => t("Use the user's account e-mail address and password for checking e-mail. (Existing users will have to re-enter their password.)"),
     'user_fields'     => t('Use additional fields in the user account to collect the login ID and password from each user.'),
 //    'module_settings' => t("Use the login ID and password collected for another module, specified in the 'Module settings' fieldset below. (Depending on how the data is stored, existing users may have to re-enter their password.)"),
-    'admin_fields'    => t("Use the form fields in the 'Log in settings' fieldset below for the login information. (All users allowed access will see the same information."),
+    'admin_fields'    => t("Use the form fields in the 'Log in settings' fieldset below for the login information. (All users allowed access will see the same information.)"),
   );
   $form['checkmail_authentication_settings']['checkmail_account_info'] = array(
     '#type'          => 'radios',
@@ -195,33 +190,34 @@ function checkmail_admin_settings() {
   );
   $form['checkmail_authentication_settings']['checkmail_option_four']['checkmail_login_password'] = array(
     '#type'          => 'password_confirm',
-    '#default_value' => variable_get('checkmail_login_password', ''),
+    '#title'         => t('Password'),
+//    '#default_value' => variable_get('checkmail_login_password', ''),
     '#description'   => t('NOTE: The stored password is not encrypted.'),
   );
 
   return system_settings_form($form);
-}  //  End of checkmail_admin_settings().
+}
 
 
 
 /**
  * Provides extra validation for the administrative settings form.
  *
- * @param form_id
- *   A unique string identifying the form.
- * @param form_values
+ * @param array $form
  *   The contents of the form fields.
+ * @param array $form_state
+ *   The state of the form after submission.
  */
-function checkmail_admin_settings_validate($form_id, $form_values) {
-  if ($form_values['checkmail_account_info'] == 'admin_fields') {
-    if ($form_values['checkmail_login_id'] == '') {
+function checkmail_admin_settings_validate($form, &$form_state) {
+  if ($form_state['values']['checkmail_account_info'] == 'admin_fields') {
+    if ($form_state['values']['checkmail_login_id'] == '') {
       form_set_error('checkmail_login_id', t('You must provide a log in ID.'));
     }
-    if ($form_values['checkmail_login_password'] == '') {
+    if ($form_state['values']['checkmail_login_password'] == '') {
       form_set_error('checkmail_login_password', t('You must provide a password.'));
     }
   }
-}  //  End of checkmail_admin_settings_validate().
+}
 
 
 
@@ -303,7 +299,7 @@ function checkmail_user($op, &$edit, &$account, $category = NULL) {
       }
       break;
   }
-}  //  End of checkmail_user().
+}
 
 
 
@@ -321,9 +317,9 @@ function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
       break;
 
     case 'configure':
-/**
- * @TODO: Add options for display of text and quick access to seeing the e-mails.
- */
+
+      // @TODO: Add options for display of text & quick access to the e-mails.
+
       if (user_access('administer checkmail')) {
         $cache_options = array('no cache', 30 => t('30 seconds'), 60 => t('1 minute'), 300 => t('5 minutes'), 600 => t('10 minutes'), 900 => t('15 minutes'), 1800 => t('30 minutes'), 3600 => t('1 hour'), 21600 => t('6 hours'), 43200 => t('12 hours'), 86400 => t('1 day'));
         $form['block_cache'] = array(
@@ -417,7 +413,7 @@ function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
 
       return $block;
   }
-}  //  End of checkmail_block().
+}
 
 
 
@@ -442,7 +438,7 @@ function checkmail_page() {
   }
 
   echo theme('page', $output);
-}  //  End of checkmail_page().
+}
 
 
 
@@ -507,11 +503,11 @@ function _checkmail() {
         $buffer = fgets($mailserver, 512);
 
         $buffer = "USER $login_id\n";
-        fputs($mailserver, $buffer);
+        fwrite($mailserver, $buffer);
         $buffer = fgets($mailserver, 512);
 
         $buffer = "PASS $login_password\n";
-        fputs($mailserver, $buffer);
+        fwrite($mailserver, $buffer);
 
         $buffer = fgets($mailserver, 512);
 
@@ -522,17 +518,17 @@ function _checkmail() {
         }
         else {
           $buffer = "STAT\n";
-          fputs($mailserver, $buffer);
+          fwrite($mailserver, $buffer);
           $buffer = fgets($mailserver, 512);
 
 // Debugging code:
-//drupal_set_message('$buffer = "'. $buffer .'"');
+// drupal_set_message('$buffer = "'. $buffer .'"');
 
           $mailsum = (int)substr($buffer, 4, 2);
           $mailmem = (int)substr($buffer, 6, drupal_strlen($buffer) - 6);
 
           $buffer = "QUIT\n";
-          fputs($mailserver, $buffer);
+          fwrite($mailserver, $buffer);
           $buffer = fgets($mailserver, 512);
 
           fclose($mailserver);
@@ -574,7 +570,7 @@ function _checkmail() {
       $server_string = '{'. $server_address .':'. $server_port . $imap_flags .'}';
 
 // Debugging code:
-//drupal_set_message('Server settings: $server_address = "'. $server_address .'"; $server_port = "'. $server_port .'"; $login_id = "'. $login_id .'"; $login_password = "'. $login_password .'"; $imap_flags = "'. $imap_flags .'"; $server_string = "'. $server_string .'"');
+// drupal_set_message('Server settings: $server_address = "'. $server_address .'"; $server_port = "'. $server_port .'"; $login_id = "'. $login_id .'"; $login_password = "'. $login_password .'"; $imap_flags = "'. $imap_flags .'"; $server_string = "'. $server_string .'"');
 
       if (($imap_resource = imap_open($server_string, $login_id, $login_password, 0)) == FALSE) {
         $error_message = t('There was an error accessing the remote server: ') . imap_last_error();
@@ -582,6 +578,14 @@ function _checkmail() {
         return $ret_val;
       }
 
+/*
+ * Investigate using
+ *   object imap_check ( resource $imap_stream )
+ * and/or
+ *   object imap_status ( resource $imap_stream , string $mailbox , int $options )
+ * instead of
+ *   object imap_mailboxmsginfo ( resource $imap_stream )
+ */
       $imap_status = imap_mailboxmsginfo($imap_resource);
       imap_close($imap_resource);
 
@@ -605,4 +609,4 @@ function _checkmail() {
   }
 
   return $ret_val;
-}  //  End of _checkmail().
+}
