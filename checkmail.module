@@ -13,6 +13,8 @@
  * @author Kristjan Jansen
  * @author David Kent Norman <deekayen at: deekayen {dot} net>
  * @author Jason Flatt http://drupal.org/user/4649
+ *
+ * @todo create proper theming functions.
  */
 
 /**
@@ -29,14 +31,12 @@ function checkmail_help($path, $arg) {
 }
 
 
-
 /**
  * Implementation of hook_perm().
  */
 function checkmail_perm() {
   return array('access checkmail', 'administer checkmail');
 }
-
 
 
 /**
@@ -63,7 +63,6 @@ function checkmail_menu() {
 }
 
 
-
 /**
  * Set administrative configuration options.
  *
@@ -71,6 +70,8 @@ function checkmail_menu() {
  *   The generated form.
  */
 function checkmail_admin_settings() {
+  $form = array();
+
   $form['checkmail_general_settings'] = array(
     '#type'  => 'fieldset',
     '#title' => t('General settings'),
@@ -85,19 +86,19 @@ function checkmail_admin_settings() {
     '#type'          => 'checkbox',
     '#title'         => t("Show the number of recent (new) messages in the inbox."),
     '#default_value' => variable_get('checkmail_number_of_recent_messages', 1),
-    '#description'   => t("Checking this will include the total number of <em>recent (new)</em> messages in the inbox as part of the display. NOTE: This only works for IMAP servers."),
+    '#description'   => t("Checking this will include the total number of <em>recent (new)</em> messages in the inbox as part of the display. NOTE: This only works for IMAP configurations."),
   );
   $form['checkmail_general_settings']['checkmail_number_of_unread_messages'] = array(
     '#type'          => 'checkbox',
     '#title'         => t("Show the number of unread messages in the inbox."),
     '#default_value' => variable_get('checkmail_number_of_unread_messages', 1),
-    '#description'   => t("Checking this will include the total number of <em>unread</em> messages in the inbox as part of the display. NOTE: This only works for IMAP servers."),
+    '#description'   => t("Checking this will include the total number of <em>unread</em> messages in the inbox as part of the display. NOTE: This only works for IMAP configurations."),
   );
   $form['checkmail_general_settings']['checkmail_size_of_mailbox'] = array(
     '#type'          => 'checkbox',
     '#title'         => t("Show the total size of the mailbox."),
     '#default_value' => variable_get('checkmail_size_of_mailbox', 1),
-    '#description'   => t("Checking this will include the total size of the mailbox as part of the display."),
+    '#description'   => t("Checking this will include the total size of the mailbox as part of the display. NOTE: This only works for POP3 configurations."),
   );
 
   $form['checkmail_server_settings'] = array(
@@ -198,8 +199,6 @@ function checkmail_admin_settings() {
   return system_settings_form($form);
 }
 
-
-
 /**
  * Provides extra validation for the administrative settings form.
  *
@@ -218,7 +217,6 @@ function checkmail_admin_settings_validate($form, &$form_state) {
     }
   }
 }
-
 
 
 /**
@@ -300,7 +298,6 @@ function checkmail_user($op, &$edit, &$account, $category = NULL) {
       break;
   }
 }
-
 
 
 /**
@@ -416,7 +413,6 @@ function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 
-
 /**
  * Generates the output when the menu link is clicked
  */
@@ -424,10 +420,18 @@ function checkmail_page() {
   $mail = _checkmail();
   if ($mail['status'] == 'success') {
     if (variable_get('checkmail_number_of_messages', 1) && variable_get('checkmail_number_of_unread_messages', 1)) {
-      $output = '<p>'. t('!account has !mailsum !e-mail (!unread of them are unread).', array('!account' => $mail['login_id'], '!mailsum' => $mail['messages'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails'), '!unread' => $mail['unread']));
+      $output = '<p>'. t('!account has !mailsum !e-mail (!unread of them are unread).', array(
+        '!account' => $mail['login_id'],
+        '!mailsum' => $mail['messages'],
+        '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails'),
+        '!unread' => $mail['unread'])
+      );
     }
     elseif (variable_get('checkmail_number_of_messages', 1) && !variable_get('checkmail_number_of_unread_messages', 1)) {
-      $output = '<p>'. t('!account has !mailsum !e-mail.', array('!account' => $mail['login_id'], '!mailsum' => $mail['messages'], '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails')));
+      $output = '<p>'. t('!account has !mailsum !e-mail.', array(
+        '!account' => $mail['login_id'],
+        '!mailsum' => $mail['messages'],
+        '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails')));
     }
     if (variable_get('checkmail_size_of_mailbox', 1)) {
       $output .= '<br />'. t('The total size of the inbox is !mailmem KB.', array('!mailmem' => sprintf("%01.2f", $mail['size'] ? $mail['size']/1024 : $mail['size']))) .'</p>';
@@ -439,7 +443,6 @@ function checkmail_page() {
 
   echo theme('page', $output);
 }
-
 
 
 /**
@@ -455,9 +458,10 @@ function checkmail_page() {
  *       'messages'    => 0,            // The total number of messages.
  *       'recent'      => 0,            // The number of recent (new) messages
  *                                      // (IMAP only).
- *       'unread'      => 0,            // The number of unread messages
- *                                      // (IMAP only).
- *       'size'        => 0             // The total size of the mailbox.
+ *       'unread'      => 0,            // The number of unread messages (IMAP
+ *                                      // only).
+ *       'size'        => 0             // The total size of the mailbox (POP3
+ *                                      // only).
  *     )
  */
 function _checkmail() {
@@ -483,12 +487,11 @@ function _checkmail() {
 
   // Error checking.
   if (empty($server_address)) {
-    watchdog('checkmail', 'The e-mail server address is not configured in the administrative settings.', WATCHDOG_ERROR);
+    watchdog('checkmail', 'The e-mail server address is not configured in the administrative settings.', array(), WATCHDOG_ERROR);
     return $ret_val;
   }
   if (empty($login_id)) {
-    $error_message = t('There is no login ID configured for user !user.', array('!user' => $user->name));
-    watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+    watchdog('checkmail', 'There is no login ID configured for user !user.', array('!user' => $user->name), WATCHDOG_ERROR);
     return $ret_val;
   }
 
@@ -496,8 +499,7 @@ function _checkmail() {
     case 'pop3':
       $mailserver = fsockopen($server_address, $server_port, $errno, $errstr, 30);
       if (!$mailserver) {
-        $error_message = t('Cannot connect to mailserver: !server. Connection error: !errno: !errstr.', array('!server' => $server_address, '!errno' => $errno, '!errstr' => $errstr));
-        watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+        watchdog('checkmail', 'Cannot connect to mailserver: !server. Connection error: !errno: !errstr.', array('!server' => $server_address, '!errno' => $errno, '!errstr' => $errstr), WATCHDOG_ERROR);
       }
       else {
         $buffer = fgets($mailserver, 512);
@@ -512,17 +514,13 @@ function _checkmail() {
         $buffer = fgets($mailserver, 512);
 
         if (substr($buffer, 0, 4) == '-ERR') {
-          $error_message = t('Invalid password or username for checking !account', array('!account' => $login_id));
-          watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+          watchdog('checkmail', 'Invalid password or username for checking !account', array('!account' => $login_id), WATCHDOG_ERROR);
           fclose($mailserver);
         }
         else {
           $buffer = "STAT\n";
           fwrite($mailserver, $buffer);
           $buffer = fgets($mailserver, 512);
-
-// Debugging code:
-// drupal_set_message('$buffer = "'. $buffer .'"');
 
           $mailsum = (int)substr($buffer, 4, 2);
           $mailmem = (int)substr($buffer, 6, drupal_strlen($buffer) - 6);
@@ -566,45 +564,30 @@ function _checkmail() {
       else {
         $imap_flags .= '/notls';
       }
-
       $server_string = '{'. $server_address .':'. $server_port . $imap_flags .'}';
-
-// Debugging code:
-// drupal_set_message('Server settings: $server_address = "'. $server_address .'"; $server_port = "'. $server_port .'"; $login_id = "'. $login_id .'"; $login_password = "'. $login_password .'"; $imap_flags = "'. $imap_flags .'"; $server_string = "'. $server_string .'"');
-
       if (($imap_resource = imap_open($server_string, $login_id, $login_password, 0)) == FALSE) {
-        $error_message = t('There was an error accessing the remote server: ') . imap_last_error();
-        watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+        watchdog('checkmail', 'There was an error accessing the remote server: ' . imap_last_error(), array(), WATCHDOG_ERROR);
         return $ret_val;
       }
 
-/*
- * Investigate using
- *   object imap_check ( resource $imap_stream )
- * and/or
- *   object imap_status ( resource $imap_stream , string $mailbox , int $options )
- * instead of
- *   object imap_mailboxmsginfo ( resource $imap_stream )
- */
-      $imap_status = imap_mailboxmsginfo($imap_resource);
+      $options =  SA_MESSAGES + SA_RECENT + SA_UNSEEN;
+      $imap_status = imap_status($imap_resource, $server_string, $options);
+
       imap_close($imap_resource);
 
       variable_set('checkmail_checked_time', time());
-      variable_set('checkmail_cache_num', $imap_status->Nmsgs);
-      variable_set('checkmail_cache_recent', $imap_status->Recent);
-      variable_set('checkmail_cache_unread', $imap_status->Unread);
-      variable_set('checkmail_cache_mem', $imap_status->Size);
+      variable_set('checkmail_cache_num', $imap_status->messages);
+      variable_set('checkmail_cache_recent', $imap_status->recent);
+      variable_set('checkmail_cache_unread', $imap_status->unseen);
 
       $ret_val['status']   = 'success';
-      $ret_val['messages'] = $imap_status->Nmsgs;
-      $ret_val['recent']   = $imap_status->Recent;
-      $ret_val['unread']   = $imap_status->Unread;
-      $ret_val['size']     = $imap_status->Size;
+      $ret_val['messages'] = $imap_status->messages;
+      $ret_val['recent']   = $imap_status->recent;
+      $ret_val['unread']   = $imap_status->unseen;
       break;
 
     default:
-      $error_message = t('An invalid server type was specified when calling the _checkmail() function: "!server_type"', array('!server_type' => $server_type));
-      watchdog('checkmail', $error_message, WATCHDOG_ERROR);
+      watchdog('checkmail', 'An invalid server type was specified when calling the _checkmail() function: "!server_type"', array('!server_type' => $server_type), WATCHDOG_ERROR);
       break;
   }
 

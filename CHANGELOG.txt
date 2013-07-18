@@ -1,5 +1,7 @@
 2013-07-17 Jason Flatt drupal@oadaeh.net
   * checkmail.info, checkmail.module: Upgaded to Drpupal 6 compatibility.
+  * checkmail.module: More Drupal upgrade code clean up. Also, changed how
+    mailbox information is retrieved for IMAP servers, to speed up the process.
 
 2008-08-25 Jason Flatt drupal@oadaeh.net
   * checkmail.module: Added hook_user() code.
