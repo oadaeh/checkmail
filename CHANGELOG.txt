@@ -1,3 +1,10 @@
+2013-07-22 Jason Flatt drupal@oadaeh.net
+  * checkmail.admin.inc, checkmail.module: Added checkmail.admin.inc and moved
+    admin functionality to it.
+  * checkmail.admin.inc, checkmail.common.inc, checkmail.module: Added
+    checkmail.common.inc and new optional password encryption capability.
+  * checkmail.module: Cleaned up hook_user() and hook_block() implementations.
+
 2013-07-17 Jason Flatt drupal@oadaeh.net
   * checkmail.info, checkmail.module: Upgaded to Drpupal 6 compatibility.
   * checkmail.module: More Drupal upgrade code clean up. Also, changed how
