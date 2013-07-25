@@ -7,7 +7,7 @@
 /**
  * Set administrative configuration options.
  *
- * @return
+ * @return array
  *   The generated form.
  */
 function checkmail_admin_settings() {
@@ -111,15 +111,15 @@ function checkmail_admin_settings() {
     '#default_value' => variable_get('checkmail_use_encryption', 0),
     '#description'   => t("By default, the login information is saved in clear text in the data field of the user table. Check this box to enable encrypting the passwords before saving them. This option requires either the !aes or !encrypt modules.",
       array(
-        '!aes' => l('AES encryption', 'http://drupal.org/project/aes'),
-        '!encrypt' => l('Encryption', 'http://drupal.org/project/encrypt')
+        '!aes' => l(t('AES encryption'), 'http://drupal.org/project/aes'),
+        '!encrypt' => l(t('Encryption'), 'http://drupal.org/project/encrypt'),
       )
     ),
   );
   $options = array(
     'user_account'    => t("Use the user's account e-mail address and password for checking e-mail. (Existing users will have to re-enter their password.)"),
     'user_fields'     => t('Use additional fields in the user account to collect the login ID and password from each user.'),
-//    'module_settings' => t("Use the login ID and password collected for another module, specified in the 'Module settings' fieldset below. (Depending on how the data is stored, existing users may have to re-enter their password.)"),
+    // 'module_settings' => t("Use the login ID and password collected for another module, specified in the 'Module settings' fieldset below. (Depending on how the data is stored, existing users may have to re-enter their password.)"),
     'admin_fields'    => t("Use the form fields in the 'Log in settings' fieldset below for the login information. (All users allowed access will see the same information.)"),
   );
   $form['checkmail_authentication_settings']['checkmail_account_info'] = array(
@@ -128,13 +128,12 @@ function checkmail_admin_settings() {
     '#default_value' => variable_get('checkmail_account_info', 'user_account'),
   );
 
-//  $form['checkmail_authentication_settings']['checkmail_option_three'] = array(
-//    '#type'        => 'fieldset',
-//    '#title'       => t('Module settings'),
-//    '#collapsible' => TRUE,
-//    '#collapsed'   => TRUE,
-//  );
-
+  // $form['checkmail_authentication_settings']['checkmail_option_three'] = array(
+  //   '#type'        => 'fieldset',
+  //   '#title'       => t('Module settings'),
+  //   '#collapsible' => TRUE,
+  //   '#collapsed'   => TRUE,
+  // );
   $form['checkmail_authentication_settings']['checkmail_option_four'] = array(
     '#type'        => 'fieldset',
     '#title'       => t('Log in settings'),
@@ -161,7 +160,6 @@ function checkmail_admin_settings() {
   // for now.
   unset($form['#submit']);
   return $form;
-//  return system_settings_form($form);
 }
 
 /**

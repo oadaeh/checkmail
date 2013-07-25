@@ -1,3 +1,7 @@
+2013-07-24 Jason Flatt drupal@oadaeh.net
+  * checkmail.admin.inc, checkmail.common.inc, checkmail.install,
+    checkmail.module: Ran through the Drupal Code Sniffer.
+
 2013-07-22 Jason Flatt drupal@oadaeh.net
   * checkmail.admin.inc, checkmail.module: Added checkmail.admin.inc and moved
     admin functionality to it.

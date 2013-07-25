@@ -4,7 +4,7 @@
  * This file contains common functionality used in multiple files.
  */
 
- /**
+/**
  * Encrypts a user's password.
  *
  * This function gives the option of not encrypting, by simply returning the
@@ -14,7 +14,7 @@
  * @param string $password
  *   The password to encrypt.
  *
- * @return
+ * @return string
  *   The encrypted password.
  */
 function _checkmail_encrypt_password($password) {
@@ -42,7 +42,7 @@ function _checkmail_encrypt_password($password) {
  * @param string $password
  *   The password to decrypt.
  *
- * @return
+ * @return string
  *   The decrypted password.
  */
 function _checkmail_decrypt_password($password) {

@@ -18,7 +18,7 @@
  */
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
 function checkmail_help($path, $arg) {
   switch ($path) {
@@ -32,7 +32,7 @@ function checkmail_help($path, $arg) {
 
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  */
 function checkmail_perm() {
   return array('access checkmail', 'administer checkmail');
@@ -40,7 +40,7 @@ function checkmail_perm() {
 
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function checkmail_menu() {
   $items = array();
@@ -65,7 +65,7 @@ function checkmail_menu() {
 
 
 /**
- * Implementation of hook_user().
+ * Implements hook_user().
  */
 function checkmail_user($op, &$edit, &$account, $category = NULL) {
   $checkmail_account_info = variable_get('checkmail_account_info', '');
@@ -94,8 +94,7 @@ function checkmail_user($op, &$edit, &$account, $category = NULL) {
           '#description' => t('The password for your e-mail account.') . $description,
         );
       }
-      return $form;
-      break;
+    return $form;
 
     case 'insert':
       if ($checkmail_account_info == 'user_account' || $checkmail_account_info == 'user_fields') {
@@ -125,8 +124,7 @@ function checkmail_user($op, &$edit, &$account, $category = NULL) {
           '#description' => t('The password for your e-mail account.') . $description,
         );
       }
-      return $form;
-      break;
+    return $form;
 
     case 'update':
       if ($category == 'account' && ($checkmail_account_info == 'user_account' || $checkmail_account_info == 'user_fields')) {
@@ -151,7 +149,7 @@ function checkmail_user($op, &$edit, &$account, $category = NULL) {
 
 
 /**
- * Implementation of hook_block().
+ * Implements hook_block().
  */
 function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
   $block = $blocks = array();
@@ -164,8 +162,20 @@ function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
       break;
 
     case 'configure':
+      // @TODO: Add options for display of text & quick access to the e-mails?
       if (user_access('administer checkmail')) {
-        $cache_options = array('no cache', 30 => t('30 seconds'), 60 => t('1 minute'), 300 => t('5 minutes'), 600 => t('10 minutes'), 900 => t('15 minutes'), 1800 => t('30 minutes'), 3600 => t('1 hour'), 21600 => t('6 hours'), 43200 => t('12 hours'), 86400 => t('1 day'));
+        $cache_options = array(
+          0 => 'no cache',
+          30 => t('30 seconds'),
+          60 => t('1 minute'),
+          300 => t('5 minutes'),
+          600 => t('10 minutes'),
+          900 => t('15 minutes'),
+          1800 => t('30 minutes'),
+          3600 => t('1 hour'),
+          21600 => t('6 hours'),
+          43200 => t('12 hours'),
+          86400 => t('1 day'));
         $form['block_cache'] = array(
           '#type'          => 'select',
           '#title'         => t('Cache'),
@@ -176,9 +186,6 @@ function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
         );
         return $form;
       }
-
-      // @TODO: Add options for display of text & quick access to the e-mails?
-
       break;
 
     case 'save':
@@ -190,7 +197,8 @@ function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
       }
       break;
 
-    case 'view': default:
+    case 'view':
+    default:
       switch ($delta) {
         case 0:
           $time = time();
@@ -235,19 +243,19 @@ function checkmail_block($op = 'list', $delta = 0, $edit = array()) {
           break;
       }
 
-      return $block;
+    return $block;
   }
 }
 
 
 /**
- * Generates the output when the menu link is clicked
+ * Generates the output when the menu link is clicked.
  */
 function checkmail_page() {
   $mail = _checkmail();
   if ($mail['status'] == 'success') {
     if (variable_get('checkmail_number_of_messages', 1) && variable_get('checkmail_number_of_unread_messages', 1)) {
-      $output = '<p>'. t('!account has !mailsum !e-mail (!unread of them are unread).', array(
+      $output = '<p>' . t('!account has !mailsum !e-mail (!unread of them are unread).', array(
         '!account' => $mail['login_id'],
         '!mailsum' => $mail['messages'],
         '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails'),
@@ -255,17 +263,17 @@ function checkmail_page() {
       );
     }
     elseif (variable_get('checkmail_number_of_messages', 1) && !variable_get('checkmail_number_of_unread_messages', 1)) {
-      $output = '<p>'. t('!account has !mailsum !e-mail.', array(
+      $output = '<p>' . t('!account has !mailsum !e-mail.', array(
         '!account' => $mail['login_id'],
         '!mailsum' => $mail['messages'],
         '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails')));
     }
     if (variable_get('checkmail_size_of_mailbox', 1)) {
-      $output .= '<br />'. t('The total size of the inbox is !mailmem KB.', array('!mailmem' => sprintf("%01.2f", $mail['size'] ? $mail['size']/1024 : $mail['size']))) .'</p>';
+      $output .= '<br />' . t('The total size of the inbox is !mailmem KB.', array('!mailmem' => sprintf("%01.2f", $mail['size'] ? $mail['size'] / 1024 : $mail['size']))) . '</p>';
     }
   }
   else {
-    $output = '<p>'. t('There was a problem checking the mailbox. Please verify that your login credentials are correct, and then check the logs for errors, correct them and try again.') .'</p>';
+    $output = '<p>' . t('There was a problem checking the mailbox. Please verify that your login credentials are correct, and then check the logs for errors, correct them and try again.') . '</p>';
   }
 
   echo theme('page', $output);
@@ -289,7 +297,7 @@ function _checkmail() {
   // Initialize the server variables.
   $server_type    = variable_get('checkmail_server_type', 'pop3');
   $server_address = variable_get('checkmail_server_address', '');
-  $server_port    = (int)variable_get('checkmail_server_port', 110);
+  $server_port    = (int) variable_get('checkmail_server_port', 110);
 
   // Initialize the user variables.
   $auth_method = variable_get('checkmail_account_info', '');
@@ -306,7 +314,15 @@ function _checkmail() {
   }
 
   // Set the initial return value.
-  $ret_val = array('status' => 'failure', 'server_type' => $server_type, 'login_id' => $login_id, 'messages' => 0, 'recent' => 0, 'unread' => 0, 'size' => 0);
+  $ret_val = array(
+    'status' => 'failure',
+    'server_type' => $server_type,
+    'login_id' => $login_id,
+    'messages' => 0,
+    'recent' => 0,
+    'unread' => 0,
+    'size' => 0,
+  );
 
   // Error checking.
   if (empty($server_address)) {
@@ -322,7 +338,11 @@ function _checkmail() {
     case 'pop3':
       $mailserver = fsockopen($server_address, $server_port, $errno, $errstr, 30);
       if (!$mailserver) {
-        watchdog('checkmail', 'Cannot connect to mailserver: !server. Connection error: !errno: !errstr.', array('!server' => $server_address, '!errno' => $errno, '!errstr' => $errstr), WATCHDOG_ERROR);
+        watchdog('checkmail', 'Cannot connect to mailserver: !server. Connection error: !errno: !errstr.', array(
+          '!server' => $server_address,
+          '!errno' => $errno,
+          '!errstr' => $errstr,
+        ), WATCHDOG_ERROR);
       }
       else {
         $buffer = fgets($mailserver, 512);
@@ -345,8 +365,8 @@ function _checkmail() {
           fwrite($mailserver, $buffer);
           $buffer = fgets($mailserver, 512);
 
-          $mailsum = (int)substr($buffer, 4, 2);
-          $mailmem = (int)substr($buffer, 6, drupal_strlen($buffer) - 6);
+          $mailsum = (int) substr($buffer, 4, 2);
+          $mailmem = (int) substr($buffer, 6, drupal_strlen($buffer) - 6);
 
           $buffer = "QUIT\n";
           fwrite($mailserver, $buffer);
@@ -387,16 +407,13 @@ function _checkmail() {
       else {
         $imap_flags .= '/notls';
       }
-      $server_string = '{'. $server_address .':'. $server_port . $imap_flags .'}';
-      // resource imap_open ( string $mailbox , string $username ,
-      //   string $password [, int $options = 0 [, int $n_retries = 0
-      //   [, array $params = NULL ]]] )
+      $server_string = '{' . $server_address . ':' . $server_port . $imap_flags . '}';
       if (($imap_resource = imap_open($server_string, $login_id, $login_password, 0, 0)) == FALSE) {
         watchdog('checkmail', 'There was an error accessing the remote server: ' . imap_last_error(), array(), WATCHDOG_ERROR);
         return $ret_val;
       }
 
-      $options =  SA_MESSAGES + SA_RECENT + SA_UNSEEN;
+      $options = SA_MESSAGES + SA_RECENT + SA_UNSEEN;
       $imap_status = imap_status($imap_resource, $server_string, $options);
 
       imap_close($imap_resource);
