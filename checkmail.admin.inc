@@ -66,7 +66,7 @@ function checkmail_admin_settings() {
     '#default_value' => variable_get('checkmail_server_port', ''),
     '#size'          => 10,
     '#maxlength'     => 10,
-    '#description'   => t("Fill in your e-mail server's port number. For POP3 servers, the default is 110. For IMAP servers, the default is 143. If you are using a secure connection with either SSL or TLS, the default for POP3 is  and for IMAP is , but check with your system administer for the correct number for your mail server."),
+    '#description'   => t("Fill in your e-mail server's port number. For POP3 servers, the default is 110. For IMAP servers, the default is 143. If you are using a secure connection with SSL, the default for POP3 is 995 and for IMAP is 993, but check with your system administer for the correct number for your mail server."),
     '#required'      => TRUE,
   );
   // Collect advanced server information.

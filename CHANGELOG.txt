@@ -1,3 +1,7 @@
+2013-08-05 Jason Flatt drupal@oadaeh.net
+  * checkmail.admin.inc: Correct description text for the "E-mail server port"
+    field on the admin page.
+
 2013-07-24 Jason Flatt drupal@oadaeh.net
   * checkmail.admin.inc, checkmail.common.inc, checkmail.install,
     checkmail.module: Ran through the Drupal Code Sniffer.
