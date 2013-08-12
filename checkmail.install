@@ -8,5 +8,7 @@
  * Implements hook_uninstall().
  */
 function checkmail_uninstall() {
-  db_query("DELETE FROM {variable} WHERE name LIKE 'checkmail_%'");
+  db_delete('variable')
+    ->condition('name', 'checkmail_%', 'LIKE')
+    ->execute();
 }

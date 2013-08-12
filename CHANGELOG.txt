@@ -1,3 +1,20 @@
+2008-08-12 Jason Flatt drupal@oadaeh.net
+  * checkmail.module: Added missing information to cached data for the block
+    display.
+
+2008-08-10 Jason Flatt drupal@oadaeh.net
+  * checkmail.module: Added a check for the permission to access Checkmail
+    before displaying the block.
+    Modified _checkmail() so that it doesn't attempt to run, if the proper
+    settings are not set.
+
+2008-08-09 Jason Flatt drupal@oadaeh.net
+  * README.txt: Updated with newer information.
+
+2013-08-07 Jason Flatt drupal@oadaeh.net
+  * checkmail.admin.inc, checkmail.info, checkmail.install, checkmail.module:
+    Beggining the upgrade to Drupal 7.
+
 2013-08-05 Jason Flatt drupal@oadaeh.net
   * checkmail.admin.inc: Correct description text for the "E-mail server port"
     field on the admin page.
@@ -36,5 +53,6 @@
     Drupal 5.x compatibility.
 
 Way back in the depths of time, this module was created by Stefan Nagtegaal
-(d.o uid 612) and later updated to DRUAPL-4-0 by Kristjan Jansen (d.o uid 11)
-and later updated to DRUAPL-4-7 by David Kent Norman (d.o uid 972).
+(http://drupal.org/user/612). Later on, it was updated to DRUAPL-4-0 by Kristjan
+Jansen (http://drupal.org/user/11). After that, it was updated to DRUAPL-4-7 by
+David Kent Norman (http://drupal.org/user/972).
