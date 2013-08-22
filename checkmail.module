@@ -234,6 +234,29 @@ function checkmail_block_view($delta) {
 
     switch ($delta) {
       case 0:
+        $mail = array();
+        $auth_method = variable_get('checkmail_account_info', '');
+        if ($auth_method == 'user_fields') {
+          global $user;
+          if (empty($user->data['checkmail_username'])) {
+            $block['content'] = t('You have not configured your account to check your mailbox statistics. You can do that by navigating to !myaccount.', array('!myaccount' => l(t('My account'), 'user')));
+            break;
+          }
+          else {
+            $mail['login_id'] = $user->data['checkmail_username'];
+          }
+        }
+        elseif ($auth_method == 'admin_fields') {
+          $checkmail_login_id = variable_get('checkmail_login_id', '');
+          if (empty($checkmail_login_id)) {
+            $block['content'] = t('The system administrator has not configured the account to check the mailbox statistics.');
+            break;
+          }
+          else {
+            $mail['login_id'] = variable_get('checkmail_login_id', '');
+          }
+        }
+
         $time = REQUEST_TIME;
         $cache = variable_get('checkmail_block_cache', 60);
         $last_check = variable_get('checkmail_checked_time', $time);
@@ -242,21 +265,11 @@ function checkmail_block_view($delta) {
           $mail = _checkmail();
         }
         else {
-          $mail = array();
           $mail['status'] = 'success';
           $mail['messages'] = variable_get('checkmail_cache_num', t('cache not set!'));
           $mail['size'] = variable_get('checkmail_cache_mem', t('cache not set!'));
           $mail['recent'] = variable_get('checkmail_cache_recent', t('cache not set!'));
           $mail['unread'] = variable_get('checkmail_cache_unread', t('cache not set!')) + $mail['recent'];
-
-          global $user;
-          $auth_method = variable_get('checkmail_account_info', '');
-          if ($auth_method == 'user_fields') {
-            $mail['login_id'] = $user->data['checkmail_username'];
-          }
-          elseif ($auth_method == 'admin_fields') {
-            $mail['login_id'] = variable_get('checkmail_login_id', '');
-          }
         }
 
         if ($mail['status'] == 'success') {
@@ -279,7 +292,7 @@ function checkmail_block_view($delta) {
           $block['content'] .= '</ul>';
         }
         elseif ($mail['status'] == 'user-uninitialized') {
-          $block['content'] = t('You have not configured your account to check your mailbox statistics. You can do that by navigating to :myaccount.', array(':myaccount' => l(t('My account'), 'user')));
+          $block['content'] = t('You have not configured your account to check your mailbox statistics. You can do that by navigating to !myaccount.', array('!myaccount' => l(t('My account'), 'user')));
         }
         elseif ($mail['status'] == 'admin-uninitialized') {
           $block['content'] = t('The system administrator has not configured the account to check the mailbox statistics.');

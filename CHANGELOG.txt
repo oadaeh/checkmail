@@ -1,3 +1,6 @@
+2008-08-21 Jason Flatt drupal@oadaeh.net
+  * checkmail.module: Added another check for missing configuration information.
+
 2008-08-12 Jason Flatt drupal@oadaeh.net
   * checkmail.module: Added missing information to cached data for the block
     display.
