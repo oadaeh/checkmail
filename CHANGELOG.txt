@@ -1,17 +1,21 @@
-2008-08-21 Jason Flatt drupal@oadaeh.net
+2013-11-28 Jason Flatt drupal@oadaeh.net
+  * checkmail.module: Check for both user authentication methods when displaying
+    the email address on the block.
+
+2013-08-21 Jason Flatt drupal@oadaeh.net
   * checkmail.module: Added another check for missing configuration information.
 
-2008-08-12 Jason Flatt drupal@oadaeh.net
+2013-08-12 Jason Flatt drupal@oadaeh.net
   * checkmail.module: Added missing information to cached data for the block
     display.
 
-2008-08-10 Jason Flatt drupal@oadaeh.net
+2013-08-10 Jason Flatt drupal@oadaeh.net
   * checkmail.module: Added a check for the permission to access Checkmail
     before displaying the block.
     Modified _checkmail() so that it doesn't attempt to run, if the proper
     settings are not set.
 
-2008-08-09 Jason Flatt drupal@oadaeh.net
+2013-08-09 Jason Flatt drupal@oadaeh.net
   * README.txt: Updated with newer information.
 
 2013-08-07 Jason Flatt drupal@oadaeh.net

@@ -236,7 +236,7 @@ function checkmail_block_view($delta) {
       case 0:
         $mail = array();
         $auth_method = variable_get('checkmail_account_info', '');
-        if ($auth_method == 'user_fields') {
+        if ($auth_method == 'user_fields' || $auth_method == 'user_account') {
           global $user;
           if (empty($user->data['checkmail_username'])) {
             $block['content'] = t('You have not configured your account to check your mailbox statistics. You can do that by navigating to !myaccount.', array('!myaccount' => l(t('My account'), 'user')));
