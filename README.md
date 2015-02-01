@@ -4,7 +4,7 @@ Checkmail
 Checkmail checks a POP3 or IMAP email account and reports statistics about the
 mailbox.
 
-This is the Backdrop port of the Drupal module, that is here:
+This is the Backdrop port of the Drupal module that is here:
 https://www.drupal.org/project/checkmail
 
 The statistics it prints are one or more of the following: the total number of
@@ -44,8 +44,8 @@ There are several configuration options to set:
 - General Settings:
 
 
-- Server Settings:
-  - POP3 email server: Enter your email server address: mail.example.com
+###- Server Settings:
+####  - POP3 email server: Enter your email server address: mail.example.com
   - POP3 email port: Enter the connection port, used to get access to the mail
     server. If you don't know what this is, leave the default configuration for
     port 110.
