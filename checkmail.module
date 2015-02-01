@@ -18,22 +18,6 @@
  */
 
 /**
- * Implements hook_help().
- */
-function checkmail_help($path, $arg) {
-  $help_text = '';
-
-  switch ($path) {
-    case 'admin/help#checkmail':
-      $help_text = t('Displays statistical information about an e-mail inbox, including the number of messages and size of the mailbox.');
-      break;
-  }
-
-  return $help_text;
-}
-
-
-/**
  * Implements hook_permission().
  */
 function checkmail_permission() {

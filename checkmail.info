@@ -1,5 +1,5 @@
 name = Checkmail
-description = "Displays statistical infomation about an e-mail mailbox."
+description = Displays statistical information about an email mailbox.
 package = Mail
-core = 7.x
+backdrop = 1.x
 configure = admin/config/system/checkmail

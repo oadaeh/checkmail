@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * The uninstall file for Checkmail, which removes it's variables.
+ * The install and uninstall routines for Checkmail.
  */
 
 /**

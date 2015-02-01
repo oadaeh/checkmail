@@ -1,3 +1,6 @@
+2015-01-31 Jason Flatt backdrop@oadaeh.net
+  * Initial port to Backdrop started.
+
 2013-11-28 Jason Flatt drupal@oadaeh.net
   * checkmail.module: Check for both user authentication methods when displaying
     the email address on the block.

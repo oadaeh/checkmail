@@ -23,10 +23,11 @@ function _checkmail_encrypt_password($password) {
       // Encrypt the password.
       $password = encrypt($password);
     }
-    elseif (module_exists('aes')) {
-      // Encrypt the password.
-      $password = aes_encrypt($password);
-    }
+//    Not currently being ported to Backdrop:
+//    elseif (module_exists('aes')) {
+//      // Encrypt the password.
+//      $password = aes_encrypt($password);
+//    }
   }
 
   return $password;
@@ -51,10 +52,11 @@ function _checkmail_decrypt_password($password) {
       // Decrypt the password.
       $password = decrypt($password);
     }
-    elseif (module_exists('aes')) {
-      // Decrypt the password.
-      $password = aes_decrypt($password);
-    }
+//    Not currently being ported to Backdrop:
+//    elseif (module_exists('aes')) {
+//      // Decrypt the password.
+//      $password = aes_decrypt($password);
+//    }
   }
 
   return $password;
