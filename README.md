@@ -17,12 +17,10 @@ idea to configure the block to display on only certain pages and/or confirm
 with the mail server administrator the amount of use you expect. The default
 cache expiration before re-checking the server is 1 minute.
 
-This module can encrypt the login password(s), if you are using either the AES
-encryption (https://drupal.org/project/aes) or Encryption
-(https://drupal.org/project/encrypt) modules. If you choose not to use either of
-them, your passwords will not be encrypted, so that if your server is
-compromised, the attacker could have access to your plaintext password(s).
-
+This module can encrypt the login password(s), if you are using Encryption
+module. If you choose not to use it, your passwords will not be encrypted, so
+that if your server is compromised, the attacker could have access to your plain
+text password(s).
 
 Requirements
 ------------
