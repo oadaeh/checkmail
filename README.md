@@ -1,6 +1,5 @@
 Checkmail
 =========
-
 Checkmail checks a POP3 or IMAP email account and reports statistics about the
 mailbox.
 
@@ -27,47 +26,69 @@ compromised, the attacker could have access to your plaintext password(s).
 
 Requirements
 ------------
-
 - Permission to use the fsockopen() and other socket functions in PHP.
 
 Installation
 ------------
-
 - Install this module using the official Backdrop CMS instructions at
   https://backdropcms.org/guide/modules
 
 Configuration
 -------------
-
 There are several configuration options to set:
 
 - General Settings:
+  - Show the number of messages in the inbox: Check this to include the total
+    number of messages in the inbox as part of the display.
+  - Show the number of recent (new) messages in the inbox: Check this to include
+    the total number of recent (new) messages in the inbox as part of the
+    display. NOTE: This only works for IMAP configurations.
+  - Show the number of unread messages in the inbox: Check this to include the
+    total number of unread messages in the inbox as part of the display. NOTE:
+    This only works for IMAP configurations.
+  - Show the total size of the mailbox: Check this to include the total size of
+    the mailbox as part of the display. NOTE: This only works for POP3
+    configurations.
 
-
-###- Server Settings:
-####  - POP3 email server: Enter your email server address: mail.example.com
-  - POP3 email port: Enter the connection port, used to get access to the mail
-    server. If you don't know what this is, leave the default configuration for
-    port 110.
-  - POP3 email username: The login ID of the email account being checked.
-  - POP3 email password: The password for the above account.
-
+- Server Settings:
+  - E-mail server type: Select the type of server, either IMAP or POP3.
+  - E-mail server name: Fill in your e-mail server's name (for example,
+    mail.example.com).
+  - E-mail server port: Fill in your e-mail server's port number. For POP3
+    servers, the default is 110. For IMAP servers, the default is 143. If you
+    are using a secure connection with SSL, the default for POP3 is 995 and for
+    IMAP is 993, but check with your system administer for the correct number
+    for your mail server.
+  - Secure login: Check this box to make a secure connection to the mail server.
+  - Validate certificate: Check this box to validate the certificate, when using
+    a secure connection.
+  - Encrypt session using SSL: Check this box to use SSL when connecting to the
+    server.
+  - Encrypt session using TLS: Check this box to use TLS when connecting to the
+    server.
 
 - Authentication Settings:
-
+  - Use encryption when saving the user's password. By default, the login
+    information is saved in clear text in the data field of the user table.
+    Check this box to enable encrypting the passwords before saving them. This
+    option requires the Encryption module to be installed.
+  - Use additional fields in the user account to collect the login ID and
+    password from each user.
+  - Use the form fields in the 'Log in settings' fieldset below for the login
+    information. (All users allowed access will see the same information.)
 
 - Log In Settings
-
+  - E-mail server log in ID: The login ID of the email account being checked.
+  - Password: The password for the above account. NOTE: The password is stored
+    in the database, and it is not encrypted.
 
 License
 -------
-
 This project is GPL v2 software. See the LICENSE.txt file in this directory for
 complete text.
 
 Current Maintainers
 -------------------
-
 Jason Flatt (https://github.com/oadaeh)
 
 Credits
