@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * The main file for Checkmail.
@@ -40,8 +41,20 @@ function checkmail_permission() {
 function checkmail_menu() {
   $items = array();
 
+  $system_admin_inc_path = '/' . backdrop_get_path('module', 'system') . '/system.admin.inc';
+//dpm($system_admin_inc_path, '$system_admin_inc_path');
+  $items['admin/config/mail'] = array(
+    'title' => 'Mail',
+    'description' => 'Settings related to email and messaging.',
+    'position' => 'left',
+    'weight' => 0,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => $system_admin_inc_path,
+  );
+
   // Administrative settings
-  $items['admin/config/system/checkmail'] = array(
+  $items['admin/config/mail/checkmail'] = array(
     'title' => 'Checkmail',
     'access arguments' => array('administer checkmail'),
     'page callback' => 'drupal_get_form',
@@ -49,6 +62,7 @@ function checkmail_menu() {
     'description' => 'Configure the settings for the mailbox to check.',
     'file' => 'checkmail.admin.inc',
   );
+
   // The page to show the stats.
   $items['checkmail'] = array(
     'title' => 'Check e-mail',
@@ -70,7 +84,8 @@ function checkmail_form_user_register_form_alter(&$form, &$form_state, $form_id)
   // If the user is allowed to access Checkmail, and the administrator has
   // chosen to collect the login ID and password, then add the fields to the
   // form.
-  if (user_access('access checkmail') && variable_get('checkmail_account_info', '') == 'user_fields') {
+  $config = config('checkmail.settings');
+  if (user_access('access checkmail') && $config->get('checkmail_account_info') === 'user_fields') {
     _checkmail_form_user_form($form);
   }
 }
@@ -84,7 +99,8 @@ function checkmail_form_user_profile_form_alter(&$form, &$form_state, $form_id) 
   // If this is the user's account form, they are allowed to access Checkmail,
   // and the administrator has chosen to collect the login ID and
   // password, then add the fields to the form.
-  if ($form['#user_category'] == 'account' && user_access('access checkmail') && variable_get('checkmail_account_info', '') == 'user_fields') {
+  $config = config('checkmail.settings');
+  if ($form['#user_category'] == 'account' && user_access('access checkmail') && $config->get('checkmail_account_info') === 'user_fields') {
     _checkmail_form_user_form($form);
   }
 }
@@ -97,7 +113,8 @@ function checkmail_form_user_profile_form_alter(&$form, &$form_state, $form_id) 
  */
 function _checkmail_form_user_form(&$form) {
   $description = '';
-  if (variable_get('checkmail_use_encryption', 0) == 0) {
+  $config = config('checkmail.settings');
+  if ($config->get('checkmail_use_encryption') === 0) {
     $description = t('NOTE: The password is stored in the database, and it is not encrypted.');
   }
 
@@ -125,7 +142,8 @@ function _checkmail_form_user_form(&$form) {
  * Implements hook_user_insert().
  */
 function checkmail_user_insert(&$edit, $account, $category) {
-  if (variable_get('checkmail_account_info', '') == 'user_fields') {
+  $config = config('checkmail.settings');
+  if ($config->get('checkmail_account_info') === 'user_fields') {
     $edit['data']['checkmail_username']  = $edit['checkmail_username'];
     module_load_include('inc', 'checkmail', 'checkmail.common');
     $edit['data']['checkmail_passsword'] = _checkmail_encrypt_password($edit['checkmail_passsword']);
@@ -137,7 +155,8 @@ function checkmail_user_insert(&$edit, $account, $category) {
  * Implements hook_user_presave().
  */
 function checkmail_user_presave(&$edit, $account, $category) {
-  if ($category == 'account' && user_access('access checkmail') && variable_get('checkmail_account_info', '') == 'user_fields') {
+  $config = config('checkmail.settings');
+  if ($category === 'account' && user_access('access checkmail') && $config->get('checkmail_account_info') === 'user_fields') {
     // If the login ID has changed, but is not empty, save it.
     if (!empty($edit['checkmail_username'])) {
       if (empty($account->data['checkmail_username']) || ($account->data['checkmail_username'] != $edit['checkmail_username'])) {
@@ -172,6 +191,7 @@ function checkmail_block_info() {
 function checkmail_block_configure($delta) {
   // @TODO: Add options for display of text & quick access to the e-mails?
   if (user_access('administer checkmail')) {
+    $config = config('checkmail.settings');
     $cache_options = array(
       0 => 'no cache',
       30 => t('30 seconds'),
@@ -188,7 +208,7 @@ function checkmail_block_configure($delta) {
     $form['block_cache'] = array(
       '#type' => 'select',
       '#title' => t('Cache'),
-      '#default_value' => variable_get('checkmail_block_cache', 60),
+      '#default_value' => $config->get('checkmail_block_cache'),
       '#options' => $cache_options,
       '#description' => t('Cache the mail results for this amount of time before querying the server again.'),
       '#required' => FALSE,
@@ -203,8 +223,10 @@ function checkmail_block_configure($delta) {
 function checkmail_block_save($delta, $edit) {
   if (user_access('administer checkmail')) {
     if ($delta == 'mailboxstats') {
-      variable_set('checkmail_block_subject', $edit['block_subject']);
-      variable_set('checkmail_block_cache', $edit['block_cache']);
+      $config = config('checkmail.settings');
+      $config->set('checkmail_block_subject', $edit['block_subject']);
+      $config->set('checkmail_block_cache', $edit['block_cache']);
+      $config->save();
     }
   }
 }
@@ -214,13 +236,14 @@ function checkmail_block_save($delta, $edit) {
  */
 function checkmail_block_view($delta) {
   if (user_access('access checkmail')) {
+    $config = config('checkmail.settings');
     $block = array();
 
     switch ($delta) {
       case 0:
         $mail = array();
-        $auth_method = variable_get('checkmail_account_info', '');
-        if ($auth_method == 'user_fields' || $auth_method == 'user_account') {
+        $auth_method = $config->get('checkmail_account_info');
+        if ($auth_method === 'user_fields' || $auth_method === 'user_account') {
           global $user;
           if (empty($user->data['checkmail_username'])) {
             $block['content'] = t('You have not configured your account to check your mailbox statistics. You can do that by navigating to !myaccount.', array('!myaccount' => l(t('My account'), 'user')));
@@ -231,45 +254,45 @@ function checkmail_block_view($delta) {
           }
         }
         elseif ($auth_method == 'admin_fields') {
-          $checkmail_login_id = variable_get('checkmail_login_id', '');
+          $checkmail_login_id = $config->get('checkmail_login_id');
           if (empty($checkmail_login_id)) {
             $block['content'] = t('The system administrator has not configured the account to check the mailbox statistics.');
             break;
           }
           else {
-            $mail['login_id'] = variable_get('checkmail_login_id', '');
+            $mail['login_id'] = $config->get('checkmail_login_id');
           }
         }
 
         $time = REQUEST_TIME;
-        $cache = variable_get('checkmail_block_cache', 60);
-        $last_check = variable_get('checkmail_checked_time', $time);
+        $cache = $config->get('checkmail_block_cache');
+        $last_check = $config->get('checkmail_checked_time');
 
         if ((!$cache || $time == $last_check) || ($cache > 0 && $time > $last_check + $cache)) {
           $mail = _checkmail();
         }
         else {
           $mail['status'] = 'success';
-          $mail['messages'] = variable_get('checkmail_cache_num', t('cache not set!'));
-          $mail['size'] = variable_get('checkmail_cache_mem', t('cache not set!'));
-          $mail['recent'] = variable_get('checkmail_cache_recent', t('cache not set!'));
-          $mail['unread'] = variable_get('checkmail_cache_unread', t('cache not set!')) + $mail['recent'];
+          $mail['messages'] = empty($config->get('checkmail_cache_num')) ? t('cache not set!') : $config->get('checkmail_cache_num');
+          $mail['size'] = empty($config->get('checkmail_cache_mem')) ? t('cache not set!') : $config->get('checkmail_cache_mem');
+          $mail['recent'] = empty($config->get('checkmail_cache_recent')) ? t('cache not set!') : $config->get('checkmail_cache_recent');
+          $mail['unread'] = empty($config->get('checkmail_cache_unread')) ? t('cache not set!') : $config->get('checkmail_cache_unread') + $mail['recent'];
         }
 
         if ($mail['status'] == 'success') {
           $block['content'] = t('Mailbox statistics for') . ' ' . $mail['login_id'] . ':';
           $block['content'] .= '<br /><ul>';
 
-          if (variable_get('checkmail_number_of_messages', 1)) {
+          if ($config->get('checkmail_number_of_messages')) {
             $block['content'] .= '<li>' . $mail['messages'] . ' ' . t('total messages') . '</li>';
           }
-          if (variable_get('checkmail_number_of_recent_messages', 1)) {
+          if ($config->get('checkmail_number_of_recent_messages')) {
             $block['content'] .= '<li>' . $mail['recent'] . ' ' . t('new messages') . '</li>';
           }
-          if (variable_get('checkmail_number_of_unread_messages', 1)) {
+          if ($config->get('checkmail_number_of_unread_messages')) {
             $block['content'] .= '<li>' . $mail['unread'] . ' ' . t('unread messages') . '</li>';
           }
-          if (variable_get('checkmail_size_of_mailbox', 1)) {
+          if ($config->get('checkmail_size_of_mailbox')) {
             $block['content'] .= '<li>' . $mail['size'] . ' ' . t('mailbox size in KB') . '</li>';
           }
 
@@ -299,7 +322,8 @@ function checkmail_block_view($delta) {
 function checkmail_page() {
   $mail = _checkmail();
   if ($mail['status'] == 'success') {
-    if (variable_get('checkmail_number_of_messages', 1) && variable_get('checkmail_number_of_unread_messages', 1)) {
+    $config = config('checkmail.settings');
+    if ($config->get('checkmail_number_of_messages') && $config->get('checkmail_number_of_unread_messages')) {
       $output = '<p>' . t('!account has !mailsum !e-mail (!unread of them are unread).', array(
         '!account' => $mail['login_id'],
         '!mailsum' => $mail['messages'],
@@ -308,14 +332,14 @@ function checkmail_page() {
       )
       );
     }
-    elseif (variable_get('checkmail_number_of_messages', 1) && !variable_get('checkmail_number_of_unread_messages', 1)) {
+    elseif ($config->get('checkmail_number_of_messages') && !$config->get('checkmail_number_of_unread_messages')) {
       $output = '<p>' . t('!account has !mailsum !e-mail.', array(
         '!account' => $mail['login_id'],
         '!mailsum' => $mail['messages'],
         '!e-mail' => $mail['messages'] == 1 ? t('e-mail') : t('e-mails'),
       ));
     }
-    if (variable_get('checkmail_size_of_mailbox', 1)) {
+    if ($config->get('checkmail_size_of_mailbox')) {
       $output .= '<br />' . t('The total size of the inbox is !mailmem KB.', array('!mailmem' => sprintf("%01.2f", $mail['size'] ? $mail['size'] / 1024 : $mail['size']))) . '</p>';
     }
   }
@@ -343,9 +367,11 @@ function checkmail_page() {
  */
 function _checkmail() {
   // Initialize the server variables.
-  $server_type    = variable_get('checkmail_server_type', 'pop3');
-  $server_address = variable_get('checkmail_server_address', '');
-  $server_port    = (int) variable_get('checkmail_server_port', 110);
+  $config = config('checkmail.settings');
+//  if ($config->get('checkmail_use_encryption') === 1) {
+  $server_type    = $config->get('checkmail_server_type');
+  $server_address = $config->get('checkmail_server_address');
+  $server_port    = (int) $config->get('checkmail_server_port');
 
   global $user;
 
@@ -361,7 +387,7 @@ function _checkmail() {
   );
 
   // Initialize the user variables.
-  $auth_method = variable_get('checkmail_account_info', '');
+  $auth_method = $config->get('checkmail_account_info');
   if ($auth_method == 'user_fields') {
     // Make sure the user has filled in the proper information before attempting
     // to access the acount data.
@@ -375,7 +401,7 @@ function _checkmail() {
     $login_password = _checkmail_decrypt_password($user->data['checkmail_passsword']);
   }
   elseif ($auth_method == 'admin_fields') {
-    $login_id = variable_get('checkmail_login_id', '');
+    $login_id = $config->get('checkmail_login_id');
     // Make sure the admin has filled in the proper information before
     // attempting to access the acount data.
     if (empty($login_id)) {
@@ -384,7 +410,7 @@ function _checkmail() {
       return $ret_val;
     }
     module_load_include('inc', 'checkmail', 'checkmail.common');
-    $login_password = _checkmail_decrypt_password(variable_get('checkmail_login_password', ''));
+    $login_password = _checkmail_decrypt_password($config->get('checkmail_login_password'));
   }
 
   $ret_val['login_id'] = $login_id;
@@ -439,9 +465,11 @@ function _checkmail() {
 
           fclose($mailserver);
 
-          variable_set('checkmail_checked_time', REQUEST_TIME);
-          variable_set('checkmail_cache_num', $mailsum);
-          variable_set('checkmail_cache_mem', $mailmem);
+          $config = config('checkmail.settings');
+          $config->set('checkmail_checked_time', REQUEST_TIME);
+          $config->set('checkmail_cache_num', $mailsum);
+          $config->set('checkmail_cache_mem', $mailmem);
+          $config->save();
 
           $ret_val['status']   = 'success';
           $ret_val['messages'] = $mailsum;
@@ -454,19 +482,19 @@ function _checkmail() {
     case 'imap':
       // Prepare the flags for connecting to the server with.
       $imap_flags = '';
-      if (variable_get('checkmail_secure_log_in', 0) == 1) {
+      if ($config->get('checkmail_secure_log_in') === 1) {
         $imap_flags .= '/secure';
       }
-      if (variable_get('checkmail_validate_cert', 0) == 1) {
+      if ($config->get('checkmail_validate_cert') === 1) {
         $imap_flags .= '/validate-cert';
       }
       else {
         $imap_flags .= '/novalidate-cert';
       }
-      if (variable_get('checkmail_use_ssl', 0) == 1) {
+      if ($config->get('checkmail_use_ssl') === 1) {
         $imap_flags .= '/ssl';
       }
-      if (variable_get('checkmail_use_tls', 0) == 1) {
+      if ($config->get('checkmail_use_tls') === 1) {
         $imap_flags .= '/tls';
       }
       else {
@@ -483,10 +511,12 @@ function _checkmail() {
 
       imap_close($imap_resource);
 
-      variable_set('checkmail_checked_time', REQUEST_TIME);
-      variable_set('checkmail_cache_num', $imap_status->messages);
-      variable_set('checkmail_cache_recent', $imap_status->recent);
-      variable_set('checkmail_cache_unread', $imap_status->unseen);
+      $config = config('checkmail.settings');
+      $config->set('checkmail_checked_time', REQUEST_TIME);
+      $config->set('checkmail_cache_num', $imap_status->messages);
+      $config->set('checkmail_cache_recent', $imap_status->recent);
+      $config->set('checkmail_cache_unread', $imap_status->unseen);
+      $config->save();
 
       $ret_val['status']   = 'success';
       $ret_val['messages'] = $imap_status->messages;

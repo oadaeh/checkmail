@@ -1,5 +1,6 @@
 Checkmail
 =========
+
 Checkmail checks a POP3 or IMAP email account and reports statistics about the
 mailbox.
 
@@ -24,15 +25,23 @@ text password(s).
 
 Requirements
 ------------
+
 - Permission to use the fsockopen() and other socket functions in PHP.
+
+- The Encrypt module.
 
 Installation
 ------------
+
 - Install this module using the official Backdrop CMS instructions at
   https://backdropcms.org/guide/modules
 
 Configuration
 -------------
+
+- Visit the configuration page under Administration > Configuration > System >
+  Checkmail (admin/config/system/checkmail) and enter the required information.
+
 There are several configuration options to set:
 
 - General Settings:
@@ -80,18 +89,26 @@ There are several configuration options to set:
   - Password: The password for the above account. NOTE: The password is stored
     in the database, and it is not encrypted.
 
+- Optionally, configure the the block. A cache setting is available at:
+  administer -> blocks -> Check email -> configure
+
 License
 -------
+
 This project is GPL v2 software. See the LICENSE.txt file in this directory for
 complete text.
 
 Current Maintainers
 -------------------
-Jason Flatt (https://github.com/oadaeh)
+
+- Jason Flatt (https://github.com/oadaeh)
 
 Credits
 -------
-The module was originally created for Drupal by Stefan Nagtegaal
-(http://drupal.org/user/612), and later updated by Kristjan Jansen
-(http://drupal.org/user/11), and then again by David Kent Norman
-(http://drupal.org/user/972).
+
+- The module was originally created for Drupal by Stefan Nagtegaal
+  (http://drupal.org/user/612)
+- It was later updated to Drupal 4.0 by Kristjan Jansen
+  (https://www.drupal.org/u/kika)
+- It was later updated to Drupal 4.7 by David Kent Norman
+  (https://www.drupal.org/u/deekayen)

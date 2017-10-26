@@ -1,5 +1,5 @@
 name = Checkmail
-description = Displays statistical information about an email mailbox.
+description = Displays statistical information about an email mailbox (number of messages, mailbox size, etc.).
 package = Mail
 backdrop = 1.x
 configure = admin/config/system/checkmail
